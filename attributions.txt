@@ -1,0 +1,3 @@
+MessagePack (.NET) - neuecc, aarnott
+pywin32 (Python) - glyph, mhammond, pf_moore
+msgpack (Python) - naoki
