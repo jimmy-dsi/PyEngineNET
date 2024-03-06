@@ -74,11 +74,34 @@ class UnixNamedPipe(NamedPipe):
 		self.client.sendall(length_prefix)
 		self.client.sendall(message)
 
-	def _readlen(self, length):
-		return self.client.recv(4)
+	def _readlen(self):
+		try:
+			length = self.client.recv(4)
+			if len(length) < 4: # Byte length being less than what we expect indicates that the connection has been terminated.
+				self._handle_broken_pipe()
+		except ConnectionResetError:
+			self._handle_broken_pipe()
+
+		return length
 
 	def _read(self, length):
-		return self.client.recv(length)
+		try:
+			data = self.client.recv(length)
+			if len(data) < length: # Data length being less than what we expect indicates that the connection has been terminated.
+				self._handle_broken_pipe()
+		except ConnectionResetError:
+			self._handle_broken_pipe()
+
+		return data
+
+	def _handle_broken_pipe(self):
+		try:
+			self.client.close()
+		except Exception as ie:
+			print(ie.message, file=sys.stderr)
+			sys.exit(1)
+		else:
+			sys.exit(0)
 
 
 class WindowsNamedPipe(NamedPipe):
