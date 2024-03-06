@@ -10,6 +10,7 @@ if platform.system() == 'Windows':
 
 ___named_pipe = None
 
+# Classes
 class NETException(Exception):
 	"Raised when an Exception occurs on the .NET side"
 	def __init__(self, typename, message):
@@ -150,10 +151,18 @@ class WindowsNamedPipe(NamedPipe):
 			raise
 
 
+# Default exception handlers. A .NET engine can override these via `engine.Exec("def ___exc_handler(ex): ...")`
 def ___exc_handler(ex):
 	print(ex, file=sys.stderr)
 
+def ___py_exc_handler(ex):
+	___exc_handler(ex)
 
+def ___net_exc_handler(ex):
+	___exc_handler(ex)
+
+
+# Main function
 def ___main(pipe_name):
 	print('Pipe name:', pipe_name)
 
@@ -186,17 +195,14 @@ def ___process_exec(result, *args):
 		#print('Executing:', result['dt'])
 		exec(result['dt'])
 		#print(___pye_var___3C6EF35F('Hello'))
-	except PipeDataException:
-		# Any issues with piping or packing data should terminate the application.
-		raise
 	except NETException as e:
 		# Since this is a .NET-side error, we don't report an error back to .NET, just handle it gracefully and move on.
-		___exc_handler(e)
+		___net_exc_handler(e)
 		result = ___send_and_recv({'cm': 'done'})
 	except Exception as e:
 		# All Python-side errors should be reported to the .NET side, however.
-		___exc_handler(e)
-		result = ___send_and_recv({'cm': 'err'})
+		___py_exc_handler(e)
+		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
 	else:
 		# General case: No errors, signal a 'done'.
 		result = ___send_and_recv({'cm': 'done'})
@@ -205,7 +211,10 @@ def ___process_exec(result, *args):
 
 def ___send_and_recv(data_dict):
 	global ___named_pipe
-	___named_pipe.write(msgpack.packb(data_dict))
+	try:
+		___named_pipe.write(msgpack.packb(data_dict))
+	except PipeDataException as e:
+		___named_pipe.write(msgpack.packb({'cm': 'err', 'dt': [str(type(e)), e.message]}))
 	return msgpack.unpackb(___named_pipe.read())
 
 
