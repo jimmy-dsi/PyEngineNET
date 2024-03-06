@@ -3,6 +3,7 @@ import sys
 import platform
 import msgpack
 import struct
+import socket
 if platform.system() == 'Windows':
 	import win32file
 
@@ -16,9 +17,22 @@ class NETException(Exception):
 
 		
 class UnixNamedPipe:
-	# TODO: Provide implementation that uses Unix Domain Sockets
 	def __init__(self, pipe_name):
 		self.pipe_name = pipe_name
+		self.socket_path = f'/tmp/CoreFxPipe_{pipe_name}' # .NET seems to prefix Unix pipe files with 'CoreFxPipe_'. Let's just roll with it I guess.
+		self.client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+		self.client.connect(self.socket_path)
+
+	def write(self, message):
+		length_prefix = struct.pack('<I', len(message))
+		self.client.sendall(length_prefix)
+		self.client.sendall(message)
+
+	def read(self):
+		length_prefix = self.client.recv(4)
+		length = struct.unpack('<I', length_prefix)[0]
+		data = self.client.recv(length)
+		return data
 
 
 class WindowsNamedPipe:
