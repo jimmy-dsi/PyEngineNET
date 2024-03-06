@@ -101,7 +101,7 @@ public class Engine: IDisposable {
 		_pipeStreamReader = new BinaryReader(_pipeServer);
 
 		var ready = receive();
-		// Wait until we receive a signal from the desired sub-process. Otherwise, close and wait for a new connection.
+		// Make sure we receive a signal from the desired sub-process. Otherwise, report an error.
 		if ((string?) ready?["cm"] == "ready" && ready?["dt"]?.ForceInt() == _subProcess.Id) {
 			Console.WriteLine("Python is ready!");
 		} else {

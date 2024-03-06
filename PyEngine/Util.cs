@@ -1,7 +1,6 @@
 ﻿namespace PyEngine;
 
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting;
 using System.Text.RegularExpressions;
 
 internal static class Util {
