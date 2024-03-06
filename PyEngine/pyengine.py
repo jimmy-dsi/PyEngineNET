@@ -98,12 +98,14 @@ class WindowsNamedPipe(NamedPipe):
 			win32file.WriteFile(self.pipe, length_prefix)
 			win32file.WriteFile(self.pipe, message)
 		except pywintypes.error as e:
-			if str(e).startswith('(109,'): # If pipe was closed by the other process, exit gracefully
+			if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
 				try:
 					win32file.CloseHandle(self.pipe)
-				except Exception:
-					pass
-				sys.exit(0)
+				except Exception as ie:
+					print(ie.message, file=sys.stderr)
+					sys.exit(1)
+				else:
+					sys.exit(0)
 			else:
 				raise
 
@@ -112,12 +114,14 @@ class WindowsNamedPipe(NamedPipe):
 			_, length_prefix = win32file.ReadFile(self.pipe, 4)
 			return length_prefix
 		except pywintypes.error as e:
-			if str(e).startswith('(109,'): # If pipe was closed by the other process, exit gracefully
+			if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
 				try:
 					win32file.CloseHandle(self.pipe)
-				except Exception:
-					pass
-				sys.exit(0)
+				except Exception as ie:
+					print(ie.message, file=sys.stderr)
+					sys.exit(1)
+				else:
+					sys.exit(0)
 			else:
 				raise
 
@@ -126,18 +130,20 @@ class WindowsNamedPipe(NamedPipe):
 			_, data = win32file.ReadFile(self.pipe, length)
 			return data
 		except pywintypes.error as e:
-			if str(e).startswith('(109,'): # If pipe was closed by the other process, exit gracefully
+			if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
 				try:
 					win32file.CloseHandle(self.pipe)
-				except Exception:
-					pass
-				sys.exit(0)
+				except Exception as ie:
+					print(ie.message, file=sys.stderr)
+					sys.exit(1)
+				else:
+					sys.exit(0)
 			else:
 				raise
 
 
 def ___exc_handler(ex):
-	print(ex)
+	print(ex, file=sys.stderr)
 
 
 def ___main(pipe_name):
@@ -169,9 +175,9 @@ def ___call_cs_method(func_name, *args):
 
 def ___process_exec(result, *args):
 	try:
-		#print('Executing:', result['dt'])
+		print('Executing:', result['dt'])
 		exec(result['dt'])
-		#print(___pye_var___3C6EF35F('Hello'))
+		print(___pye_var___3C6EF35F('Hello'))
 	except PipeDataException:
 		# Any issues with piping or packing data should terminate the application.
 		raise
