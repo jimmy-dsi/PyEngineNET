@@ -98,48 +98,33 @@ class WindowsNamedPipe(NamedPipe):
 			win32file.WriteFile(self.pipe, length_prefix)
 			win32file.WriteFile(self.pipe, message)
 		except pywintypes.error as e:
-			if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
-				try:
-					win32file.CloseHandle(self.pipe)
-				except Exception as ie:
-					print(ie.message, file=sys.stderr)
-					sys.exit(1)
-				else:
-					sys.exit(0)
-			else:
-				raise
+			self._handle_winerror(e)
 
 	def _readlen(self):
 		try:
 			_, length_prefix = win32file.ReadFile(self.pipe, 4)
 			return length_prefix
 		except pywintypes.error as e:
-			if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
-				try:
-					win32file.CloseHandle(self.pipe)
-				except Exception as ie:
-					print(ie.message, file=sys.stderr)
-					sys.exit(1)
-				else:
-					sys.exit(0)
-			else:
-				raise
+			self._handle_winerror(e)
 
 	def _read(self, length):
 		try:
 			_, data = win32file.ReadFile(self.pipe, length)
 			return data
 		except pywintypes.error as e:
-			if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
-				try:
-					win32file.CloseHandle(self.pipe)
-				except Exception as ie:
-					print(ie.message, file=sys.stderr)
-					sys.exit(1)
-				else:
-					sys.exit(0)
+			self._handle_winerror(e)
+
+	def _handle_winerror(self, e):
+		if e.winerror == 109: # If pipe was closed by the other process, exit gracefully
+			try:
+				win32file.CloseHandle(self.pipe)
+			except Exception as ie:
+				print(ie.message, file=sys.stderr)
+				sys.exit(1)
 			else:
-				raise
+				sys.exit(0)
+		else:
+			raise
 
 
 def ___exc_handler(ex):
@@ -175,9 +160,9 @@ def ___call_cs_method(func_name, *args):
 
 def ___process_exec(result, *args):
 	try:
-		print('Executing:', result['dt'])
+		#print('Executing:', result['dt'])
 		exec(result['dt'])
-		print(___pye_var___3C6EF35F('Hello'))
+		#print(___pye_var___3C6EF35F('Hello'))
 	except PipeDataException:
 		# Any issues with piping or packing data should terminate the application.
 		raise
