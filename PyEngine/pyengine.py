@@ -6,6 +6,7 @@ import struct
 import socket
 if platform.system() == 'Windows':
 	import win32file
+	import pywintypes
 
 ___named_pipe = None
 
@@ -15,27 +16,72 @@ class NETException(Exception):
 		super().__init__(typename + ' - ' + message)
 		self.typename = typename
 
+
+class PipeDataException(Exception):
+	"Raised when there is an error either packing, unpacking, sending, or receiving data"
+	def __init__(self, message):
+		super().__init__(message)
+
+
+class NamedPipe:
+	def __init__(self, pipe_name):
+		pass
+
+	def write(self, message):
+		if len(message) >= 0x8000_0000:
+			raise PipeDataException('Data too large for pipe')
 		
-class UnixNamedPipe:
+		try:
+			length_prefix = struct.pack('<I', len(message))
+		except Exception as e:
+			raise PipeDataException('Error packing data for pipe')
+
+		try:
+			self._write(length_prefix, message)
+		except Exception as e:
+			raise PipeDataException('Error writing data to pipe')
+
+	def read(self):
+		try:
+			length_prefix = self._readlen()
+		except Exception as e:
+			raise PipeDataException('Error reading data from pipe')
+			
+		try:
+			length = struct.unpack('<I', length_prefix)[0]
+		except Exception as e:
+			raise PipeDataException('Error unpacking data from pipe')
+
+		if length < 0:
+			raise PipeDataException('Invalid data size from pipe')
+			
+		try:
+			data = self._read(length)
+		except Exception as e:
+			raise PipeDataException('Error reading data from pipe')
+
+		return data
+
+		
+class UnixNamedPipe(NamedPipe):
 	def __init__(self, pipe_name):
 		self.pipe_name = pipe_name
 		self.socket_path = f'/tmp/CoreFxPipe_{pipe_name}' # .NET seems to prefix Unix pipe files with 'CoreFxPipe_'. Let's just roll with it I guess.
 		self.client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 		self.client.connect(self.socket_path)
 
-	def write(self, message):
-		length_prefix = struct.pack('<I', len(message))
+	def _write(self, length_prefix, message):
 		self.client.sendall(length_prefix)
 		self.client.sendall(message)
 
-	def read(self):
-		length_prefix = self.client.recv(4)
-		length = struct.unpack('<I', length_prefix)[0]
-		data = self.client.recv(length)
-		return data
+	def _readlen(self, length):
+		return self.client.recv(4)
+
+	def _read(self, length):
+		return self.client.recv(length)
 
 
-class WindowsNamedPipe:
+class WindowsNamedPipe(NamedPipe):
 	def __init__(self, pipe_name):
 		self.pipe_name = pipe_name
 		full_pipe_name = rf'\\.\pipe\{pipe_name}'
@@ -47,16 +93,47 @@ class WindowsNamedPipe:
 			                     win32file.OPEN_EXISTING,
 			                     0, None)
 
-	def write(self, message):
-		length_prefix = struct.pack('<I', len(message))
-		win32file.WriteFile(self.pipe, length_prefix)
-		win32file.WriteFile(self.pipe, message)
+	def _write(self, length_prefix, message):
+		try:
+			win32file.WriteFile(self.pipe, length_prefix)
+			win32file.WriteFile(self.pipe, message)
+		except pywintypes.error as e:
+			if str(e).startswith('(109,'): # If pipe was closed by the other process, exit gracefully
+				try:
+					win32file.CloseHandle(self.pipe)
+				except Exception:
+					pass
+				sys.exit(0)
+			else:
+				raise
 
-	def read(self):
-		_, length_prefix = win32file.ReadFile(self.pipe, 4)
-		length = struct.unpack('<I', length_prefix)[0]
-		_, data = win32file.ReadFile(self.pipe, length)
-		return data
+	def _readlen(self):
+		try:
+			_, length_prefix = win32file.ReadFile(self.pipe, 4)
+			return length_prefix
+		except pywintypes.error as e:
+			if str(e).startswith('(109,'): # If pipe was closed by the other process, exit gracefully
+				try:
+					win32file.CloseHandle(self.pipe)
+				except Exception:
+					pass
+				sys.exit(0)
+			else:
+				raise
+
+	def _read(self, length):
+		try:
+			_, data = win32file.ReadFile(self.pipe, length)
+			return data
+		except pywintypes.error as e:
+			if str(e).startswith('(109,'): # If pipe was closed by the other process, exit gracefully
+				try:
+					win32file.CloseHandle(self.pipe)
+				except Exception:
+					pass
+				sys.exit(0)
+			else:
+				raise
 
 
 def ___exc_handler(ex):
@@ -92,7 +169,12 @@ def ___call_cs_method(func_name, *args):
 
 def ___process_exec(result, *args):
 	try:
+		#print('Executing:', result['dt'])
 		exec(result['dt'])
+		#print(___pye_var___3C6EF35F('Hello'))
+	except PipeDataException:
+		# Any issues with piping or packing data should terminate the application.
+		raise
 	except NETException as e:
 		# Since this is a .NET-side error, we don't report an error back to .NET, just handle it gracefully and move on.
 		___exc_handler(e)
