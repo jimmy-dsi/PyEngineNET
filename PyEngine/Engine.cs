@@ -101,8 +101,12 @@ public class Engine: IDisposable {
 		_pipeStreamReader = new BinaryReader(_pipeServer);
 
 		var ready = receive();
-		if ((string?) ready?["cm"] == "ready") {
+		// Wait until we receive a signal from the desired sub-process. Otherwise, close and wait for a new connection.
+		if ((string?) ready?["cm"] == "ready" && ready?["dt"]?.ForceInt() == _subProcess.Id) {
 			Console.WriteLine("Python is ready!");
+		} else {
+			_pipeServer.Close();
+			throw new InvalidDataException("Process connected to named pipe does not match expected process ID.");
 		}
 
 		if (!PyPrimitivesInit) {

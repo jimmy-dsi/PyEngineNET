@@ -1,6 +1,7 @@
 ﻿namespace PyEngine;
 
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting;
 using System.Text.RegularExpressions;
 
 internal static class Util {
@@ -41,5 +42,32 @@ internal static class Util {
 		// The LCG formula
 		int hash = (int) ((uint) (a * n) + c);
 		return hash.AsHex();
+	}
+
+	internal static int? ForceInt(this object? obj) {
+		if (obj == null) {
+			return null;
+		} else {
+			var otype = obj.GetType();
+			if (otype == typeof(int)) {
+				return (int?) obj;
+			} else if (otype == typeof(uint)) {
+				return (int?) (uint?) obj;
+			} else if (otype == typeof(long)) {
+				return (int?) (long?) obj;
+			} else if (otype == typeof(ulong)) {
+				return (int?) (ulong?) obj;
+			} else if (otype == typeof(byte)) {
+				return (int?) (byte?) obj;
+			} else if (otype == typeof(sbyte)) {
+				return (int?) (sbyte?) obj;
+			} else if (otype == typeof(ushort)) {
+				return (int?) (ushort?) obj;
+			} else if (otype == typeof(short)) {
+				return (int?) (short?) obj;
+			} else {
+				return (int?) obj;
+			}
+		}
 	}
 }

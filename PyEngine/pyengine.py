@@ -163,7 +163,7 @@ def ___main(pipe_name):
 	else:
 		___named_pipe = UnixNamedPipe(pipe_name)
 
-	result = ___send_and_recv({'cm': 'ready'})
+	result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
 	while True:
 		if result['cm'] == 'exec':
 			result = ___process_exec(result)
