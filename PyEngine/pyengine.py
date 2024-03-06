@@ -15,12 +15,14 @@ class NETException(Exception):
 	"Raised when an Exception occurs on the .NET side"
 	def __init__(self, typename, message):
 		super().__init__(typename + ' - ' + message)
+		self.message = message
 		self.typename = typename
 
 
 class PipeDataException(Exception):
 	"Raised when there is an error either packing, unpacking, sending, or receiving data"
 	def __init__(self, message):
+		self.message = message
 		super().__init__(message)
 
 
