@@ -208,13 +208,23 @@ public class Engine: IDisposable {
 
 	private Dictionary<string, object> receive() {
 		var length = _pipeStreamReader.ReadInt32();
-		var data   = _pipeStreamReader.ReadBytes(length);
+		if (length < 0) {
+			throw new PipeDataException("Invalid data size from pipe");
+		}
+		var data = _pipeStreamReader.ReadBytes(length);
 		return MessagePackSerializer.Deserialize<Dictionary<string, object>>(data);
 	}
 
 	private Dictionary<string, object> sendAndReceive(Dictionary<string, object> data) {
 		// First, send
-		var bytes = MessagePackSerializer.Serialize(data);
+		byte[] bytes;
+		try {
+			bytes = MessagePackSerializer.Serialize(data);
+		} catch (OverflowException) {
+			throw new PipeDataException("Data too large for pipe");
+		} catch (OutOfMemoryException) {
+			throw new PipeDataException("Data too large for pipe");
+		}
 		_pipeStreamWriter.Write(bytes.Length);
 		_pipeStreamWriter.Write(bytes);
 
