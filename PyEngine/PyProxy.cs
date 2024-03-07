@@ -43,11 +43,7 @@ internal class PyProxy: PyObject, IDisposable {
 
 	internal override PyObject evaluate() {
 		checkPyKey();
-
-		var resultObject = Create(engine);
-		engine.Exec($"global {resultObject._pyGVarName} \n"
-		          + $"{resultObject._pyGVarName} = {getExpression()} \n");
-
+		var resultObject = engine.Eval(getExpression(), eager: true);
 		return resultObject;
 	}
 

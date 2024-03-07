@@ -4,10 +4,7 @@ internal abstract class PyOperation: PyObject {
 	internal PyOperation(Engine? engine): base(engine) { }
 
 	internal override PyObject evaluate() {
-		var resultObject = PyProxy.Create(engine);
-		engine.Exec($"global {resultObject.pyGVarName} \n"
-		          + $"{resultObject.pyGVarName} = {getExpression()} \n");
-
+		var resultObject = engine.Eval(getExpression(), eager: true);
 		return resultObject;
 	}
 }
@@ -597,7 +594,7 @@ internal class PyInvokation: PyOperation {
 	internal override string getExpression() {
 		var argExprs = new List<string>();
 		foreach (var param in _params) {
-			argExprs.Append(param.getExpression());
+			argExprs.Add(param.getExpression());
 		}
 		return $"{_value.getExpression()}({string.Join(", ", argExprs)})";
 	}

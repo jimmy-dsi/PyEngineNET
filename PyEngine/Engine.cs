@@ -1,11 +1,12 @@
 ﻿namespace PyEngine;
 
 using MessagePack;
+using System;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
-public class Engine: IDisposable {
+public partial class Engine: IDisposable {
 	public static Engine? Default { get; set; } = null;
 
 	private static int _nextInstanceId = 0;
@@ -62,8 +63,11 @@ public class Engine: IDisposable {
 	}
 	
 	internal bool PyPrimitivesInit = false;
-	internal PyObject Len;
-	internal PyObject Str;
+	internal PyObject? len = null;
+	internal PyObject? str = null;
+
+	public PyObject Len => len ?? throw new InvalidOperationException("Engine instance has not been started.");
+	public PyObject Str => str ?? throw new InvalidOperationException("Engine instance has not been started.");
 
 	public void Start() {
 		Default = this;
@@ -110,8 +114,8 @@ public class Engine: IDisposable {
 		}
 
 		if (!PyPrimitivesInit) {
-			Len = Eval("len");
-			Str = Eval("str");
+			len = Eval("len");
+			str = Eval("str");
 		}
 	}
 
@@ -122,26 +126,9 @@ public class Engine: IDisposable {
 		do {
 			result = sendAndReceive(new() { ["cm"] = "exec", ["dt"] = pythonCode });
 			switch ((string) result["cm"]) {
-				case "call": {
-					var methodName = (string) result["func"];
-					var args = Eval("[*args]");
-					int argCount = Len.Invoke(args).Result;
-
-					var argArray = new PyObject[] { };
-					for (var i = 0; i < argCount; i++) {
-						argArray.Append(args[i]);
-					}
-
-					var method = _boundFuncs[methodName];
-					try {
-						var returnVal = method.Invoke(argArray);
-						result = sendAndReceive(new() { ["cm"] = "retn", ["dt"] = returnVal.getExpression() });
-					} catch (Exception ex) {
-						result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = new List<object> { ex.GetType().ToString(), ex.Message } });
-					}
-
+				case "call":
+					processCall(ref result);
 					break;
-				}
 
 				case "err": {
 					var excInfo = (List<object>) result["dt"];
@@ -152,31 +139,80 @@ public class Engine: IDisposable {
 					break;
 
 				default:
-					// TODO: Thrown exception about unknown command code
-					break;
+					throw new InvalidOperationException($"Unknown command received from Python driver: \"{(string) result["cm"]}\"");
 			}
 		} while ((string) result["cm"] != "done" && (string) result["cm"] != "err");
 	}
 
-	public PyObject Eval(string pythonExpression) {
+	public PyObject Eval(string pythonExpression, bool eager = false) {
 		Default = this;
 
-		var pyObject = PyProxy.Create(this);
-		Exec($"global {pyObject.pyGVarName} \n"
-		   + $"{pyObject.pyGVarName} = {pythonExpression} \n");
+		if (eager) {
+			Dictionary<string, object> result;
+			while (true) {
+				result = sendAndReceive(new() { ["cm"] = "eval", ["dt"] = pythonExpression });
+				switch ((string) result["cm"]) {
+					case "call":
+						processCall(ref result);
+						break;
 
-		return pyObject;
+					case "err": {
+						var excInfo = (List<object>) result["dt"];
+						throw new PyException((string) excInfo[0], (string) excInfo[1]);
+					}
+
+					case "res": {
+						var pyResolve = new PyResolved(this, result["dt"]);
+						return pyResolve;
+					}
+
+					default:
+						throw new InvalidOperationException($"Unknown command received from Python driver: \"{(string) result["cm"]}\"");
+				}
+			}
+		} else {
+			var pyObject = PyProxy.Create(this);
+			Exec($"global {pyObject.pyGVarName} \n"
+				+ $"{pyObject.pyGVarName} = {pythonExpression} \n");
+
+			return pyObject;
+		}
 	}
 
-	public void BindMethod(string pyFuncName, MethodBinding csMethod) {
+	private void processCall(ref Dictionary<string, object> result) {
+		var methodName = (string) result["func"];
+		var args = Eval("[*args]");
+		var argCountPyObj = len!.Invoke(args);
+		var argCountP = argCountPyObj.Result;
+		int argCount = argCountP;
+
+		var argArray = new PyObject[] { };
+		for (var i = 0; i < argCount; i++) {
+			argArray.Append(args[i]);
+		}
+
+		var method = _boundFuncs[methodName];
+		try {
+			var returnVal = method.Invoke(argArray);
+			result = sendAndReceive(new() { ["cm"] = "retn", ["dt"] = returnVal.getExpression() });
+		} catch (Exception ex) {
+			result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = new List<object> { ex.GetType().ToString(), ex.Message } });
+		}
+	}
+
+	internal void BindMethod(string pyFuncName, MethodBinding csMethod) {
 		Default = this;
 
 		if (!Util.IdentRegex.IsMatch(pyFuncName)) {
 			throw new FormatException("Python function name must be a valid identifier.");
 		}
 
+		var l = new List<string>();
+		var m = l.Select(x => x);
+
 		_boundFuncs[pyFuncName] = csMethod;
-		Exec($"def {pyFuncName}(*args): \n"
+		Exec($"global {pyFuncName} \n"
+		   + $"def {pyFuncName}(*args): \n"
 		   + $"    return ___call_cs_method('{pyFuncName}', *args) \n");
 	}
 

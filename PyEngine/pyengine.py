@@ -178,14 +178,19 @@ def ___main(pipe_name):
 	while True:
 		if result['cm'] == 'exec':
 			result = ___process_exec(result)
+		elif result['cm'] == 'eval':
+			result = ___process_eval(result)
 
 
 def ___call_cs_method(func_name, *args):
+	result = ___send_and_recv({'cm': 'call', 'func': func_name})
+
 	while True:
-		result = ___send_and_recv({'cm': 'call', 'func': func_name})
 		if result['cm'] == 'exec':
 			result = ___process_exec(result, *args)
-		if result['cm'] == 'retn':
+		elif result['cm'] == 'eval':
+			result = ___process_eval(result)
+		elif result['cm'] == 'retn':
 			return eval(result['dt'])
 		elif result['cm'] == 'err':
 			err_info = result['dt']
@@ -194,13 +199,13 @@ def ___call_cs_method(func_name, *args):
 
 def ___process_exec(result, *args):
 	try:
-		#print('Executing:', result['dt'])
+		print(result['dt'])
 		exec(result['dt'])
 		#print(___pye_var___3C6EF35F('Hello'))
 	except NETException as e:
-		# Since this is a .NET-side error, we don't report an error back to .NET, just handle it gracefully and move on.
+		# Propogate original .NET-side error.
 		___net_exc_handler(e)
-		result = ___send_and_recv({'cm': 'done'})
+		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
 	except Exception as e:
 		# All Python-side errors should be reported to the .NET side, however.
 		___py_exc_handler(e)
@@ -208,6 +213,25 @@ def ___process_exec(result, *args):
 	else:
 		# General case: No errors, signal a 'done'.
 		result = ___send_and_recv({'cm': 'done'})
+	return result
+
+
+def ___process_eval(result, *args):
+	try:
+		print(result['dt'])
+		value = eval(result['dt'])
+	except NETException as e:
+		# Propogate original .NET-side error.
+		___net_exc_handler(e)
+		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
+	except Exception as e:
+		# All Python-side errors should be reported to the .NET side, however.
+		___py_exc_handler(e)
+		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
+	else:
+		# General case: No errors, signal a 'res' indicating eval result is done.
+		# TODO: Support serializable classes
+		result = ___send_and_recv({'cm': 'res', 'dt': value})
 	return result
 
 

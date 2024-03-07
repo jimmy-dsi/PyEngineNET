@@ -1,5 +1,7 @@
 ﻿namespace PyEngine;
 
+using System.Diagnostics;
+
 public abstract class PyObject: IDisposable {
 	public class Accessor {
 		private readonly PyObject _pyObject;
@@ -47,7 +49,10 @@ public abstract class PyObject: IDisposable {
 	}
 
 	public Accessor Attr   => _accessor;
+	[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 	public PyObject Result => evaluate();
+
+	internal string Expression => getExpression();
 
 	internal PyObject(Engine? engine) {
 		_engine = engine;
@@ -69,11 +74,19 @@ public abstract class PyObject: IDisposable {
 
 	// Conversions
 	public static PyObject ConvertFrom<T>(T value) {
-		throw new NotImplementedException();
+		if (value is PyObject) {
+			return (value as PyObject)!;
+		} else {
+			throw new NotImplementedException();
+		}
 	}
 
 	public virtual T ConvertTo<T>() {
-		throw new NotImplementedException();
+		if (typeof(T) == typeof(PyObject)) {
+			return (T) (object) this;
+		} else {
+			throw new NotImplementedException();
+		}
 	}
 
 	// Implicit Conversions
