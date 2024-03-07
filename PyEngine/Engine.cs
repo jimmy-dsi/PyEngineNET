@@ -207,9 +207,6 @@ public partial class Engine: IDisposable {
 			throw new FormatException("Python function name must be a valid identifier.");
 		}
 
-		var l = new List<string>();
-		var m = l.Select(x => x);
-
 		_boundFuncs[pyFuncName] = csMethod;
 		Exec($"global {pyFuncName} \n"
 		   + $"def {pyFuncName}(*args): \n"
