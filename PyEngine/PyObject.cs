@@ -85,22 +85,24 @@ public abstract class PyObject: IDisposable {
 		if (typeof(T) == typeof(PyObject)) {
 			return (T) (object) this;
 		} else {
-			throw new NotImplementedException();
+			return convertTo<T>();
 		}
 	}
 
+	protected virtual T convertTo<T>() => Result.convertTo<T>();
+
 	// Implicit Conversions
-	public static implicit operator bool                       (PyObject p) => throw new NotImplementedException();
-	public static implicit operator int                        (PyObject p) => throw new NotImplementedException();
-	public static implicit operator long                       (PyObject p) => throw new NotImplementedException();
-	public static implicit operator float                      (PyObject p) => throw new NotImplementedException();
-	public static implicit operator double                     (PyObject p) => throw new NotImplementedException();
-	public static implicit operator decimal                    (PyObject p) => throw new NotImplementedException();
-	public static implicit operator string                     (PyObject p) => throw new NotImplementedException();
+	public static implicit operator bool                       (PyObject p) => p.convertTo<bool>();
+	public static implicit operator int                        (PyObject p) => p.convertTo<int>();
+	public static implicit operator long                       (PyObject p) => p.convertTo<long>();
+	public static implicit operator float                      (PyObject p) => p.convertTo<float>();
+	public static implicit operator double                     (PyObject p) => p.convertTo<double>();
+	public static implicit operator decimal                    (PyObject p) => p.convertTo<decimal>();
+	public static implicit operator string                     (PyObject p) => p.convertTo<string>();
 	public static implicit operator List<object>               (PyObject p) => throw new NotImplementedException();
 	public static implicit operator object[]                   (PyObject p) => throw new NotImplementedException();
 	public static implicit operator HashSet<object>            (PyObject p) => throw new NotImplementedException();
-	public static implicit operator Dictionary<object, object> (PyObject p) => throw new NotImplementedException();
+	public static implicit operator Dictionary<object, object> (PyObject p) => p.convertTo<Dictionary<object, object>>();
 
 	public static implicit operator PyObject (bool                       b) => throw new NotImplementedException();
 	public static implicit operator PyObject (int                        i) => throw new NotImplementedException();

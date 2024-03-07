@@ -11,4 +11,15 @@ internal class PyResolved: PyObject {
 
 	internal override PyObject evaluate() => this;
 	internal override string getExpression() => throw new NotImplementedException();
+
+	// Conversion
+	protected override T convertTo<T>() {
+		if (typeof(T).IsIntegerType() && _value.GetType().IsIntegerType()) {
+			return _value.AsIntType<T>();
+		} else if (typeof(T) == _value.GetType()) {
+			return (T) _value;
+		} else {
+			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(T)}");
+		}
+	}
 }

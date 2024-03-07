@@ -185,6 +185,7 @@ public partial class Engine: IDisposable {
 		var argCountPyObj = len!.Invoke(args);
 		var argCountP = argCountPyObj.Result;
 		int argCount = argCountP;
+		Console.WriteLine(argCount);
 
 		var argArray = new PyObject[] { };
 		for (var i = 0; i < argCount; i++) {
