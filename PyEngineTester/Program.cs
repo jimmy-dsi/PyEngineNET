@@ -3,13 +3,13 @@
 var engine = new Engine("python", "pyengine.py");
 engine.Start();
 
-engine.BindFunction("get_sum", (PyObject list, PyObject i, PyObject accum) => {
-	for (; i < engine.Len.Invoke(list); i++) {
+engine.BindFunction("get_sum", (PyObject list) => {
+	int accum = 0;
+	for (var i = 0; i < engine.Len.Invoke(list); i++) {
 		accum += list[i];
 	}
 	return accum;
 });
 
-var result = engine.Eval("get_sum([1, 2, 3, 4, 5], 0, 0)");
-
-Console.WriteLine(AppContext.BaseDirectory);
+int result = engine.Eval("get_sum([1, 2, 3, 4, 5])");
+Console.WriteLine(result);

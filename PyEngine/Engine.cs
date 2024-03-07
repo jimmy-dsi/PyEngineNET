@@ -122,9 +122,8 @@ public partial class Engine: IDisposable {
 	public void Exec(string pythonCode) {
 		Default = this;
 		
-		Dictionary<string, object> result;
-		do {
-			result = sendAndReceive(new() { ["cm"] = "exec", ["dt"] = pythonCode });
+		Dictionary<string, object> result = sendAndReceive(new() { ["cm"] = "exec", ["dt"] = pythonCode });
+		while (true) {
 			switch ((string) result["cm"]) {
 				case "call":
 					processCall(ref result);
@@ -136,21 +135,20 @@ public partial class Engine: IDisposable {
 				}
 
 				case "done":
-					break;
+					return;
 
 				default:
 					throw new InvalidOperationException($"Unknown command received from Python driver: \"{(string) result["cm"]}\"");
 			}
-		} while ((string) result["cm"] != "done" && (string) result["cm"] != "err");
+		}
 	}
 
 	public PyObject Eval(string pythonExpression, bool eager = false) {
 		Default = this;
 
 		if (eager) {
-			Dictionary<string, object> result;
+			Dictionary<string, object> result = sendAndReceive(new() { ["cm"] = "eval", ["dt"] = pythonExpression });
 			while (true) {
-				result = sendAndReceive(new() { ["cm"] = "eval", ["dt"] = pythonExpression });
 				switch ((string) result["cm"]) {
 					case "call":
 						processCall(ref result);
@@ -179,6 +177,36 @@ public partial class Engine: IDisposable {
 		}
 	}
 
+	public static string PyExpression(object value) {
+		var vtype = value.GetType();
+		if (vtype == typeof(bool)) {
+			var v = (bool) value;
+			return v ? "True" : "False";
+		} else if (vtype.IsNumericType()) {
+			return value.ToString()!;
+		} else if (vtype == typeof(string)) {
+			return ((string) value).Escape();
+		} else if (vtype == typeof(List<object>)) {
+			var v = (List<object>) value;
+			return $"[{string.Join(", ", v.Select(PyExpression))}]";
+		} else if (vtype == typeof(object[])) {
+			var v = (object[]) value;
+			return $"[{string.Join(", ", v.Select(PyExpression))}]";
+		} else if (vtype == typeof(HashSet<object>)) {
+			var v = (HashSet<object>) value;
+			if (v.Count == 0) {
+				return "set()";
+			} else {
+				return $"{{{string.Join(", ", v.Select(PyExpression))}}}";
+			}
+		} else if (vtype == typeof(Dictionary<object, object>)) {
+			var v = (Dictionary<object, object>) value;
+			return $"{{{string.Join(", ", v.Select(x => $"{PyExpression(x.Key)} : {PyExpression(x.Value)}"))}}}";
+		} else {
+			throw new InvalidOperationException($"Cannot convert value of type `{vtype}` to a Python expression.");
+		}
+	}
+
 	private void processCall(ref Dictionary<string, object> result) {
 		var methodName = (string) result["func"];
 		var args = Eval("[*args]");
@@ -187,10 +215,11 @@ public partial class Engine: IDisposable {
 		int argCount = argCountP;
 		Console.WriteLine(argCount);
 
-		var argArray = new PyObject[] { };
+		var argList = new List<PyObject> { };
 		for (var i = 0; i < argCount; i++) {
-			argArray.Append(args[i]);
+			argList.Add(args[i]);
 		}
+		var argArray = argList.ToArray();
 
 		var method = _boundFuncs[methodName];
 		try {

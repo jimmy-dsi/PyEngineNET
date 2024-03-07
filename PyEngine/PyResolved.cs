@@ -10,7 +10,9 @@ internal class PyResolved: PyObject {
 	public override void Dispose() { }
 
 	internal override PyObject evaluate() => this;
-	internal override string getExpression() => throw new NotImplementedException();
+	internal override string getExpression() {
+		return Engine.PyExpression(_value);
+	}
 
 	// Conversion
 	protected override T convertTo<T>() {

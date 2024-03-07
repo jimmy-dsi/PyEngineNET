@@ -1,6 +1,7 @@
 ﻿namespace PyEngine;
 
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 
 internal static class Util {
@@ -295,5 +296,47 @@ internal static class Util {
 
 	internal static bool IsNumericType(this Type type) {
 		return type.IsIntegerType() || type.IsDecimalType();
+	}
+
+	internal static string Escape(this string str) {
+		var sb = new StringBuilder();
+		sb.Append("\"");
+		foreach (var c in str) {
+			switch (c) {
+				case '"':
+					sb.Append("\\\"");
+					break;
+				case '\n':
+					sb.Append("\\n");
+					break;
+				case '\r':
+					sb.Append("\\r");
+					break;
+				case '\t':
+					sb.Append("\\t");
+					break;
+				case '\b':
+					sb.Append("\\b");
+					break;
+				case '\f':
+					sb.Append("\\f");
+					break;
+				case '\\':
+					sb.Append("\\\\");
+					break;
+				default:
+					if (c < 0x20 || c >= 0x7F && c <= 0xFF) {
+						sb.Append($"\\x{AsHex(c)[6..]}");
+					} else if (c >= 0x100) {
+						sb.Append($"\\u{AsHex(c)[4..]}");
+					} else {
+						// TODO: Convert UTF-16 Surrogate pairs to proper UTF-8 value
+						sb.Append(c);
+					}
+					break;
+			}
+		}
+		sb.Append("\"");
+		return sb.ToString();
 	}
 }
