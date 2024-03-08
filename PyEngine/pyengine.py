@@ -164,6 +164,21 @@ def ___net_exc_handler(ex):
 	___exc_handler(ex)
 
 
+# Serializer
+___primitives = (bool, int, float, str, bytes, bytearray, type(None))
+def ___ser(value):
+	if isinstance(value, ___primitives):
+		return value
+	elif isinstance(value, list):
+		return [___ser(x) for x in value]
+	elif isinstance(value, dict):
+		return {___ser(k): ___ser(v) for k, v in value.items()}
+	elif isinstance(value, set):
+		return {'___type': 'set', '___set': ___ser(list(value))}
+	else:
+		return value # TODO: Raise error about un-serializable class
+
+
 # Main function
 def ___main(pipe_name):
 	print('Pipe name:', pipe_name)
@@ -174,65 +189,59 @@ def ___main(pipe_name):
 	else:
 		___named_pipe = UnixNamedPipe(pipe_name)
 
-	result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
+	___result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
 	while True:
-		if result['cm'] == 'exec':
-			result = ___process_exec(result)
-		elif result['cm'] == 'eval':
-			result = ___process_eval(result)
+		if ___result['cm'] == 'exec':
+			try:
+				print(___result['dt'])
+				exec(___result['dt'])
+			except Exception as e:
+				___result = ___catch_exec_eval(e)
+			else:
+				___result = ___send_and_recv({'cm': 'done'})
+		elif ___result['cm'] == 'eval':
+			try:
+				print(___result['dt'])
+				___value = eval(___result['dt'])
+			except Exception as e:
+				___result = ___catch_exec_eval(e)
+			else:
+				___result = ___send_and_recv({'cm': 'res', 'dt': ___ser(___value)})
 
 
-def ___call_cs_method(func_name, *args):
-	result = ___send_and_recv({'cm': 'call', 'func': func_name})
+def ___call_cs_method(___func_name, *___args):
+	___result = ___send_and_recv({'cm': 'call', 'func': ___func_name})
 
 	while True:
-		if result['cm'] == 'exec':
-			result = ___process_exec(result, *args)
-		elif result['cm'] == 'eval':
-			result = ___process_eval(result)
-		elif result['cm'] == 'retn':
-			return eval(result['dt'])
-		elif result['cm'] == 'err':
-			err_info = result['dt']
+		if ___result['cm'] == 'exec':
+			try:
+				print(___result['dt'])
+				exec(___result['dt'])
+			except Exception as e:
+				___result = ___catch_exec_eval(e)
+			else:
+				___result = ___send_and_recv({'cm': 'done'})
+		elif ___result['cm'] == 'eval':
+			try:
+				print(___result['dt'])
+				___value = eval(___result['dt'])
+			except Exception as e:
+				___result = ___catch_exec_eval(e)
+			else:
+				___result = ___send_and_recv({'cm': 'res', 'dt': ___ser(___value)})
+		elif ___result['cm'] == 'retn':
+			return eval(___result['dt'])
+		elif ___result['cm'] == 'err':
+			err_info = ___result['dt']
 			raise NETException(err_info[0], err_info[1])
 
 
-def ___process_exec(result, *args):
-	try:
-		print(result['dt'])
-		exec(result['dt'])
-		#print(___pye_var___3C6EF35F('Hello'))
-	except NETException as e:
-		# Propogate original .NET-side error.
+def ___catch_exec_eval(e):
+	if isinstance(e, NETException):
 		___net_exc_handler(e)
-		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
-	except Exception as e:
-		# All Python-side errors should be reported to the .NET side, however.
-		___py_exc_handler(e)
-		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
 	else:
-		# General case: No errors, signal a 'done'.
-		result = ___send_and_recv({'cm': 'done'})
-	return result
-
-
-def ___process_eval(result, *args):
-	try:
-		print(result['dt'])
-		value = eval(result['dt'])
-	except NETException as e:
-		# Propogate original .NET-side error.
-		___net_exc_handler(e)
-		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
-	except Exception as e:
-		# All Python-side errors should be reported to the .NET side, however.
 		___py_exc_handler(e)
-		result = ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), e.message]})
-	else:
-		# General case: No errors, signal a 'res' indicating eval result is done.
-		# TODO: Support serializable classes
-		result = ___send_and_recv({'cm': 'res', 'dt': value})
-	return result
+	return ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), str(e)]})
 
 
 def ___send_and_recv(data_dict):

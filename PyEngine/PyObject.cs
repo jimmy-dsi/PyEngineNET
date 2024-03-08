@@ -119,9 +119,9 @@ public abstract class PyObject: IDisposable {
 	public static implicit operator double                     (PyObject p) => p.convertTo<double>();
 	public static implicit operator decimal                    (PyObject p) => p.convertTo<decimal>();
 	public static implicit operator string                     (PyObject p) => p.convertTo<string>();
-	public static implicit operator List<object>               (PyObject p) => throw new NotImplementedException();
-	public static implicit operator object[]                   (PyObject p) => throw new NotImplementedException();
-	public static implicit operator HashSet<object>            (PyObject p) => throw new NotImplementedException();
+	public static implicit operator List<object>               (PyObject p) => p.convertTo<List<object>>();
+	public static implicit operator object[]                   (PyObject p) => p.convertTo<object[]>();
+	public static implicit operator HashSet<object>            (PyObject p) => p.convertTo<HashSet<object>>();
 	public static implicit operator Dictionary<object, object> (PyObject p) => p.convertTo<Dictionary<object, object>>();
 
 	public static implicit operator PyObject (bool                       o) => ConvertFrom(o);

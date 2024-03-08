@@ -130,7 +130,7 @@ public partial class Engine: IDisposable {
 					break;
 
 				case "err": {
-					var excInfo = (List<object>) result["dt"];
+					var excInfo = (object[]) result["dt"];
 					throw new PyException((string) excInfo[0], (string) excInfo[1]);
 				}
 
@@ -155,7 +155,7 @@ public partial class Engine: IDisposable {
 						break;
 
 					case "err": {
-						var excInfo = (List<object>) result["dt"];
+						var excInfo = (object[]) result["dt"];
 						throw new PyException((string) excInfo[0], (string) excInfo[1]);
 					}
 
@@ -209,11 +209,10 @@ public partial class Engine: IDisposable {
 
 	private void processCall(ref Dictionary<string, object> result) {
 		var methodName = (string) result["func"];
-		var args = Eval("[*args]");
+		var args = Eval("[*___args]");
 		var argCountPyObj = len!.Invoke(args);
 		var argCountP = argCountPyObj.Result;
 		int argCount = argCountP;
-		Console.WriteLine(argCount);
 
 		var argList = new List<PyObject> { };
 		for (var i = 0; i < argCount; i++) {
