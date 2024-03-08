@@ -106,23 +106,27 @@ public abstract class PyObject: IDisposable {
 	protected virtual T convertTo<T>() => Result.convertTo<T>();
 
 	// Implicit Conversions
-	public static implicit operator bool                       (PyObject p) => p.convertTo<bool>();
-	public static implicit operator byte                       (PyObject p) => p.convertTo<byte>();
-	public static implicit operator sbyte                      (PyObject p) => p.convertTo<sbyte>();
-	public static implicit operator ushort                     (PyObject p) => p.convertTo<ushort>();
-	public static implicit operator short                      (PyObject p) => p.convertTo<short>();
-	public static implicit operator uint                       (PyObject p) => p.convertTo<uint>();
-	public static implicit operator int                        (PyObject p) => p.convertTo<int>();
-	public static implicit operator ulong                      (PyObject p) => p.convertTo<ulong>();
-	public static implicit operator long                       (PyObject p) => p.convertTo<long>();
-	public static implicit operator float                      (PyObject p) => p.convertTo<float>();
-	public static implicit operator double                     (PyObject p) => p.convertTo<double>();
-	public static implicit operator decimal                    (PyObject p) => p.convertTo<decimal>();
-	public static implicit operator string                     (PyObject p) => p.convertTo<string>();
-	public static implicit operator List<object>               (PyObject p) => p.convertTo<List<object>>();
-	public static implicit operator object[]                   (PyObject p) => p.convertTo<object[]>();
-	public static implicit operator HashSet<object>            (PyObject p) => p.convertTo<HashSet<object>>();
-	public static implicit operator Dictionary<object, object> (PyObject p) => p.convertTo<Dictionary<object, object>>();
+	public static implicit operator bool                           (PyObject p) => p.convertTo<bool>();
+	public static implicit operator byte                           (PyObject p) => p.convertTo<byte>();
+	public static implicit operator sbyte                          (PyObject p) => p.convertTo<sbyte>();
+	public static implicit operator ushort                         (PyObject p) => p.convertTo<ushort>();
+	public static implicit operator short                          (PyObject p) => p.convertTo<short>();
+	public static implicit operator uint                           (PyObject p) => p.convertTo<uint>();
+	public static implicit operator int                            (PyObject p) => p.convertTo<int>();
+	public static implicit operator ulong                          (PyObject p) => p.convertTo<ulong>();
+	public static implicit operator long                           (PyObject p) => p.convertTo<long>();
+	public static implicit operator float                          (PyObject p) => p.convertTo<float>();
+	public static implicit operator double                         (PyObject p) => p.convertTo<double>();
+	public static implicit operator decimal                        (PyObject p) => p.convertTo<decimal>();
+	public static implicit operator string                         (PyObject p) => p.convertTo<string>();
+	public static implicit operator List<object>                   (PyObject p) => p.convertTo<List<object>>();
+	public static implicit operator List<PyObject>                 (PyObject p) => p.convertTo<List<PyObject>>();
+	public static implicit operator object[]                       (PyObject p) => p.convertTo<object[]>();
+	public static explicit operator PyObject[]                     (PyObject p) => p.convertTo<PyObject[]>();
+	public static implicit operator HashSet<object>                (PyObject p) => p.convertTo<HashSet<object>>();
+	public static implicit operator HashSet<PyObject>              (PyObject p) => p.convertTo<HashSet<PyObject>>();
+	public static implicit operator Dictionary<object, object>     (PyObject p) => p.convertTo<Dictionary<object, object>>();
+	public static implicit operator Dictionary<PyObject, PyObject> (PyObject p) => p.convertTo<Dictionary<PyObject, PyObject>>();
 
 	public static implicit operator PyObject (bool                       o) => ConvertFrom(o);
 	public static implicit operator PyObject (byte                       o) => ConvertFrom(o);
@@ -349,9 +353,7 @@ public abstract class PyObject: IDisposable {
 		throw new NotImplementedException();
 	}
 
-	public override int GetHashCode() {
-		throw new NotImplementedException();
-	}
+	public override abstract int GetHashCode();
 
 	//
 	private static void checkEngines(params Engine[] engines) {

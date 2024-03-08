@@ -7,6 +7,10 @@ internal abstract class PyOperation: PyObject {
 		var resultObject = engine.Eval(getExpression(), eager: true);
 		return resultObject;
 	}
+
+	public override int GetHashCode() {
+		return Result.GetHashCode();
+	}
 }
 
 

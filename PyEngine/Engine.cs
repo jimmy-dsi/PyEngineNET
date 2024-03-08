@@ -179,7 +179,9 @@ public partial class Engine: IDisposable {
 
 	public static string PyExpression(object value) {
 		var vtype = value.GetType();
-		if (vtype == typeof(bool)) {
+		if (value is PyObject) {
+			return PyExpression(((PyResolved) ((PyObject) value).Result).Value);
+		} else if (vtype == typeof(bool)) {
 			var v = (bool) value;
 			return v ? "True" : "False";
 		} else if (vtype.IsNumericType()) {
@@ -189,8 +191,14 @@ public partial class Engine: IDisposable {
 		} else if (vtype == typeof(List<object>)) {
 			var v = (List<object>) value;
 			return $"[{string.Join(", ", v.Select(PyExpression))}]";
+		} else if (vtype == typeof(List<PyObject>)) {
+			var v = (List<PyObject>) value;
+			return $"[{string.Join(", ", v.Select(PyExpression))}]";
 		} else if (vtype == typeof(object[])) {
 			var v = (object[]) value;
+			return $"[{string.Join(", ", v.Select(PyExpression))}]";
+		} else if (vtype == typeof(PyObject[])) {
+			var v = (PyObject[]) value;
 			return $"[{string.Join(", ", v.Select(PyExpression))}]";
 		} else if (vtype == typeof(HashSet<object>)) {
 			var v = (HashSet<object>) value;
@@ -199,8 +207,18 @@ public partial class Engine: IDisposable {
 			} else {
 				return $"{{{string.Join(", ", v.Select(PyExpression))}}}";
 			}
+		} else if (vtype == typeof(HashSet<PyObject>)) {
+			var v = (HashSet<PyObject>) value;
+			if (v.Count == 0) {
+				return "set()";
+			} else {
+				return $"{{{string.Join(", ", v.Select(PyExpression))}}}";
+			}
 		} else if (vtype == typeof(Dictionary<object, object>)) {
 			var v = (Dictionary<object, object>) value;
+			return $"{{{string.Join(", ", v.Select(x => $"{PyExpression(x.Key)} : {PyExpression(x.Value)}"))}}}";
+		} else if (vtype == typeof(Dictionary<PyObject, PyObject>)) {
+			var v = (Dictionary<PyObject, PyObject>) value;
 			return $"{{{string.Join(", ", v.Select(x => $"{PyExpression(x.Key)} : {PyExpression(x.Value)}"))}}}";
 		} else {
 			throw new InvalidOperationException($"Cannot convert value of type `{vtype}` to a Python expression.");

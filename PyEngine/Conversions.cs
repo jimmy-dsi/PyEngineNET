@@ -273,23 +273,23 @@ internal static partial class Util {
 	}
 	
 	// List conversions
-	internal static List<object> AsList(this object obj) {
+	internal static List<T> AsList<T>(this object obj) {
 		var otype = obj.GetType();
-		if (otype == typeof(List<object>)) {
-			return (List<object>) obj;
-		} else if (otype == typeof(object[])) {
-			return ((object[]) obj).ToList();
+		if (otype == typeof(List<T>)) {
+			return (List<T>) obj;
+		} else if (otype == typeof(T[])) {
+			return ((T[]) obj).ToList();
 		}
 
 		throw new InvalidOperationException("Object is not a list type.");
 	}
 
-	internal static object[] AsArray(this object obj) {
+	internal static T[] AsArray<T>(this object obj) {
 		var otype = obj.GetType();
-		if (otype == typeof(List<object>)) {
-			return ((List<object>) obj).ToArray();
-		} else if (otype == typeof(object[])) {
-			return (object[]) obj;
+		if (otype == typeof(List<T>)) {
+			return ((List<T>) obj).ToArray();
+		} else if (otype == typeof(T[])) {
+			return (T[]) obj;
 		}
 
 		throw new InvalidOperationException("Object is not a list type.");
@@ -306,12 +306,12 @@ internal static partial class Util {
 		throw new InvalidOperationException("Object is not a list type.");
 	}
 
-	internal static T AsListType<T>(this object obj) {
-		if (typeof(T) == typeof(List<object>)) {
-			return (T) (object) obj.AsList();
-		} else if (typeof(T) == typeof(object[])) {
-			return (T) (object) obj.AsArray();
-		} else if (typeof(T) == typeof(IEnumerable<object>)) {
+	internal static T AsListType<T, U>(this object obj) {
+		if (typeof(T) == typeof(List<U>)) {
+			return (T) (object) obj.AsList<U>();
+		} else if (typeof(T) == typeof(U[])) {
+			return (T) (object) obj.AsArray<U>();
+		} else if (typeof(T) == typeof(IEnumerable<U>)) {
 			return (T) (object) obj.AsIEnumerable();
 		} else {
 			throw new InvalidOperationException("Object is not a list type.");
@@ -339,9 +339,9 @@ internal static partial class Util {
 		return type.IsIntegerType() || type.IsDecimalType();
 	}
 
-	internal static bool IsListType(this Type type) {
-		return type == typeof(List<object>)
-		    || type == typeof(object[])
-		    || type == typeof(IEnumerable<object>);
+	internal static bool IsListType<T>(this Type type) {
+		return type == typeof(List<T>)
+		    || type == typeof(T[])
+		    || type == typeof(IEnumerable<T>);
 	}
 }

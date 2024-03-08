@@ -25,6 +25,10 @@ internal class PyProxy: PyObject, IDisposable {
 		throw new NotImplementedException();
 	}
 
+	public override int GetHashCode() {
+		return Result.GetHashCode();
+	}
+
 	public override void Dispose() {
 		Dispose(disposing: true);
 		GC.SuppressFinalize(this);

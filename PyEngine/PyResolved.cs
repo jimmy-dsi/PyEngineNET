@@ -2,9 +2,30 @@
 
 internal class PyResolved: PyObject {
 	private readonly object _value;
+	internal object Value => _value;
 
 	public PyResolved(Engine? engine, object value): base(engine) {
 		_value = loadObject(value);
+	}
+
+	public override int GetHashCode() {
+		return _value.GetHashCode();
+	}
+
+	public override bool Equals(object? obj) {
+		if (ReferenceEquals(this, obj)) {
+			return true;
+		}
+
+		if (ReferenceEquals(obj, null)) {
+			return false;
+		}
+
+		if (obj is PyResolved) {
+			return _value.Equals(((PyResolved) obj)._value);
+		}
+
+		throw new NotImplementedException();
 	}
 
 	public override void Dispose() { }
@@ -52,11 +73,41 @@ internal class PyResolved: PyObject {
 		} else if (typeof(T).IsDecimalType() && _value.GetType().IsNumericType()) {
 			// Handles: float, double, decimal
 			return _value.AsDecimalType<T>();
-		} else if (typeof(T).IsListType() && _value.GetType().IsListType()) {
-			// Handles: object[], List<object>, IEnumerable<object>
-			return _value.AsListType<T>();
+		} else if (typeof(T).IsListType<object>() && _value.GetType().IsListType<object>()) {
+			// Handles: object[], List<object>
+			return _value.AsListType<T, object>();
+		} else if (typeof(T).IsListType<PyObject>() && _value.GetType().IsListType<object>()) {
+			// Handles: PyObject[], List<PyObject>
+			var arr = _value.AsListType<object[], object>();
+			var result = new PyObject[arr.Length];
+
+			for (var i = 0; i < arr.Length; i++) {
+				result[i] = new PyResolved(engine, arr[i]);
+			}
+
+			return result.AsListType<T, PyObject>();
+		} else if (typeof(T) == typeof(HashSet<PyObject>) && _value.GetType() == typeof(HashSet<object>)) {
+			// Handles: HashSet<PyObject>
+			var set = (HashSet<object>) _value;
+			var result = new HashSet<PyObject>();
+
+			foreach (var item in set) {
+				result.Add(new PyResolved(engine, item));
+			}
+
+			return (T) (object) result;
+		} else if (typeof(T) == typeof(Dictionary<PyObject, PyObject>) && _value.GetType() == typeof(Dictionary<object, object>)) {
+			// Handles: Dictionary<PyObject, PyObject>
+			var dict = (Dictionary<object, object>) _value;
+			var result = new Dictionary<PyObject, PyObject>();
+
+			foreach (var item in dict) {
+				result[new PyResolved(engine, item.Key)] = new PyResolved(engine, item.Value);
+			}
+
+			return (T) (object) result;
 		} else if (typeof(T) == _value.GetType()) {
-			// Handles: bool
+			// Handles: bool, string, HashSet<object>, Dictionary<object, object>
 			return (T) _value;
 		} else {
 			//Console.WriteLine(_value.GetType());
