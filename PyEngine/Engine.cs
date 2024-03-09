@@ -220,6 +220,15 @@ public partial class Engine: IDisposable {
 		} else if (vtype == typeof(Dictionary<PyObject, PyObject>)) {
 			var v = (Dictionary<PyObject, PyObject>) value;
 			return $"{{{string.Join(", ", v.Select(x => $"{PyExpression(x.Key)} : {PyExpression(x.Value)}"))}}}";
+		} else if (vtype == typeof(byte[])) {
+			var v = (byte[]) value;
+			return $"bytearray([{string.Join(", ", v.Select(x => PyExpression(x)))}])";
+		} else if (vtype == typeof(List<byte>)) {
+			var v = (List<byte>) value;
+			return $"bytearray([{string.Join(", ", v.Select(x => PyExpression(x)))}])";
+		} else if (value is DataClassObject) {
+			var v = (DataClassObject) value;
+			return $"{v.ClassName}({string.Join(", ", v.PropNames.Select(x => $"{x}= {PyExpression(v[x])}"))})";
 		} else {
 			throw new InvalidOperationException($"Cannot convert value of type `{vtype}` to a Python expression.");
 		}

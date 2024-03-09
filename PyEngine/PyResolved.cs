@@ -5,7 +5,7 @@ internal class PyResolved: PyObject {
 	internal object Value => _value;
 
 	public PyResolved(Engine? engine, object value): base(engine) {
-		_value = loadObject(value);
+		_value = deserialize(value);
 	}
 
 	public override int GetHashCode() {
@@ -36,20 +36,31 @@ internal class PyResolved: PyObject {
 	}
 
 	//
-	private object loadObject(object value) {
+	private object deserialize(object value) {
 		if (value is Dictionary<object, object>) {
 			var v = (Dictionary<object, object>) value;
 			if (v.ContainsKey("___type")) {
 				if (v.ContainsKey("___set")) {
-					return ((object[]) loadObject(v["___set"])).ToHashSet();
+					return ((object[]) deserialize(v["___set"])).ToHashSet();
 				} else {
-					// TODO: Convert to "Data class" object
-					throw new NotImplementedException();
+					var className  = (string) v["___type"];
+					var properties = (object[]) deserialize(v["___data"]);
+					var propDict   = new Dictionary<string, object>();
+					var propNames  = new string[properties.Length];
+
+					for (var i = 0; i < properties.Length; i++) {
+						var item = (object[]) properties[i];
+						var propName = (string) item[0];
+						propNames[i] = propName;
+						propDict[propName] = item[1];
+					}
+
+					return new DataClassObject(className, propNames, propDict);
 				}
 			} else {
 				var dict = new Dictionary<object, object>();
 				foreach (var item in v) {
-					dict[loadObject(item.Key)] = loadObject(item.Value);
+					dict[deserialize(item.Key)] = deserialize(item.Value);
 				}
 				return dict;
 			}
@@ -57,7 +68,7 @@ internal class PyResolved: PyObject {
 			var v = (object[]) value;
 			var list = new List<object>();
 			foreach (var item in v) {
-				list.Add(loadObject(item));
+				list.Add(deserialize(item));
 			}
 			return list.ToArray();
 		} else {
@@ -106,8 +117,18 @@ internal class PyResolved: PyObject {
 			}
 
 			return (T) (object) result;
+		} else if (typeof(T).IsListType<byte>() && _value.GetType().IsListType<byte>()) {
+			// Handles: byte[], List<byte>
+			var arr = _value.AsListType<byte[], byte>();
+			var result = new byte[arr.Length];
+
+			for (var i = 0; i < arr.Length; i++) {
+				result[i] = new PyResolved(engine, arr[i]);
+			}
+
+			return result.AsListType<T, byte>();
 		} else if (typeof(T) == _value.GetType()) {
-			// Handles: bool, string, HashSet<object>, Dictionary<object, object>
+			// Handles: bool, string, HashSet<object>, Dictionary<object, object>, DataClassObject
 			return (T) _value;
 		} else {
 			//Console.WriteLine(_value.GetType());

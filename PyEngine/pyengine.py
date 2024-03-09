@@ -4,6 +4,7 @@ import platform
 import msgpack
 import struct
 import socket
+import dataclasses
 if platform.system() == 'Windows':
 	import win32file
 	import pywintypes
@@ -165,7 +166,7 @@ def ___net_exc_handler(ex):
 
 
 # Serializer
-___primitives = (bool, int, float, str, bytes, bytearray, type(None))
+___primitives = (bool, int, float, str, bytes, bytearray, tuple, type(None))
 def ___ser(value):
 	if isinstance(value, ___primitives):
 		return value
@@ -175,6 +176,17 @@ def ___ser(value):
 		return {___ser(k): ___ser(v) for k, v in value.items()}
 	elif isinstance(value, set):
 		return {'___type': 'set', '___set': ___ser(list(value))}
+	elif dataclasses.is_dataclass(value):
+		dt = type(value)
+		return {
+			'___type': f'{dt.__module__}.{dt.__name__}',
+			'___data': ___ser(
+				[
+					[x.name, ___ser(getattr(value, x.name))] \
+						for x in dataclasses.fields(dt)
+				]
+			)
+		}
 	else:
 		return value # TODO: Raise error about un-serializable class
 
