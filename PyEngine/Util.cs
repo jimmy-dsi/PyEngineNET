@@ -112,4 +112,43 @@ internal static partial class Util {
 		sb.Append("\"");
 		return sb.ToString();
 	}
+
+	internal static int NumCompareTo(this IComparable lhs, IComparable rhs) {
+		var ltype = lhs.GetType();
+		var rtype = rhs.GetType();
+
+		if (ltype.IsNumericType() && rtype.IsNumericType()) {
+			if (ltype.IsDecimalType() && rtype.IsDecimalType()) {
+				if (ltype.IsFloatType() && rtype.IsFloatType()) {
+					return lhs.AsDouble().CompareTo(rhs.AsDouble());
+				} else if (ltype == typeof(float) && rtype == typeof(decimal)) {
+					return lhs.AsDecimal().CompareTo(rhs.AsDouble());
+				} else if (ltype == typeof(decimal) && rtype == typeof(float)) {
+					return lhs.AsDecimal().CompareTo(rhs.AsDouble());
+				}
+			} else if (ltype.IsDecimalType() || rtype.IsDecimalType()) {
+				if (ltype == typeof(double) || ltype == typeof(float)) {
+					if (rtype != typeof(long) && rtype != typeof(ulong)) {
+						return lhs.AsDouble().CompareTo(rhs.AsDouble());
+					}
+				} else if (ltype == typeof(decimal)) {
+					if (rtype != typeof(long) && rtype != typeof(ulong) && rtype != typeof(int) && rtype != typeof(uint)) {
+						return lhs.AsDecimal().CompareTo(rhs.AsDecimal());
+					}
+				} else if (rtype == typeof(double) || rtype == typeof(float)) {
+					if (ltype != typeof(long) && ltype != typeof(ulong)) {
+						return lhs.AsDouble().CompareTo(rhs.AsDouble());
+					}
+				} else if (rtype == typeof(decimal)) {
+					if (ltype != typeof(long) && ltype != typeof(ulong) && ltype != typeof(int) && ltype != typeof(uint)) {
+						return lhs.AsDecimal().CompareTo(rhs.AsDecimal());
+					}
+				}
+			} else if (ltype != typeof(ulong) && rtype != typeof(ulong)) {
+				return lhs.AsLong().CompareTo(rhs.AsLong());
+			}
+		}
+
+		return lhs.CompareTo(rhs);
+	}
 }

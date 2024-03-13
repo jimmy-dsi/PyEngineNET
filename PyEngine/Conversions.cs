@@ -335,6 +335,11 @@ internal static partial class Util {
 		    || type == typeof(decimal);
 	}
 
+	internal static bool IsFloatType(this Type type) {
+		return type == typeof(float)
+		    || type == typeof(double);
+	}
+
 	internal static bool IsNumericType(this Type type) {
 		return type.IsIntegerType() || type.IsDecimalType();
 	}

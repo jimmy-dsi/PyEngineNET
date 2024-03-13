@@ -126,6 +126,25 @@ if (pyLeft >= pyRight) {
 	Console.WriteLine("No");
 }
 
+if (pyLeft == 10) {
+	Console.WriteLine("No");
+}
+if (pyLeft != 10) {
+	Console.WriteLine("No");
+}
+if (pyLeft < 10) {
+	Console.WriteLine("No");
+}
+if (pyLeft <= 10) {
+	Console.WriteLine("Yes");
+}
+if (pyLeft > 10) {
+	Console.WriteLine("Yes");
+}
+if (pyLeft >= 10) {
+	Console.WriteLine("Yes");
+}
+
 var pyEquals             = pyLeft.PyEquals(pyRight);
 var pyNotEquals          = pyLeft.PyNotEquals(pyRight);
 var pyLessThan           = pyLeft.PyLessThan(pyRight);
