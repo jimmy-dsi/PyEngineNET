@@ -75,6 +75,79 @@ Console.WriteLine(Engine.PyExpression(name1));
 
 DataClassObject dataclass = engine.Eval("MyDataClass(foo= 7, zzz= False, bar= {'Hello', 'there!'})");
 Console.WriteLine(Engine.PyExpression(dataclass));
+Console.WriteLine(Engine.PyExpression(dataclass["foo"]));
+Console.WriteLine(Engine.PyExpression(dataclass["zzz"]));
+Console.WriteLine(Engine.PyExpression(dataclass["bar"]));
+dataclass["bar"] = new HashSet<object> { "Hello", "World!" };
 
 PyObject dc = dataclass;
 Console.WriteLine(Engine.PyExpression(dc));
+
+engine.Exec("""
+@dataclass
+class MyOtherDataClass: 
+	test: int 
+	thing: bool 
+
+	def __add__(self, other):
+		return MyOtherDataClass(test= self.test + other, thing= self.thing)
+""");
+DataClassObject dataclass2 = engine.Eval("MyDataClass(foo= 7, zzz= False, bar= MyOtherDataClass(test = 22, thing = True))");
+Console.WriteLine(Engine.PyExpression(dataclass2));
+
+var dco = engine.Eval("MyOtherDataClass(10, True)", eager: true);
+dco = (dco + 18).Result;
+dco.Attr["thing"] = false;
+Console.WriteLine(Engine.PyExpression(dco));
+
+var testNum = engine.Eval("12.5", eager: true);
+var py = testNum.Attr["__round__"].Invoke();
+Console.WriteLine(Engine.PyExpression(py));
+
+var pyLeft  = engine.Eval("12");
+var pyRight = engine.Eval("20");
+
+if (pyLeft == pyRight) {
+	Console.WriteLine("No");
+}
+if (pyLeft != pyRight) {
+	Console.WriteLine("Yes");
+}
+if (pyLeft < pyRight) {
+	Console.WriteLine("Yes");
+}
+if (pyLeft <= pyRight) {
+	Console.WriteLine("Yes");
+}
+if (pyLeft > pyRight) {
+	Console.WriteLine("No");
+}
+if (pyLeft >= pyRight) {
+	Console.WriteLine("No");
+}
+
+var pyEquals             = pyLeft.PyEquals(pyRight);
+var pyNotEquals          = pyLeft.PyNotEquals(pyRight);
+var pyLessThan           = pyLeft.PyLessThan(pyRight);
+var pyLessThanOrEqual    = pyLeft.PyLessThanOrEqual(pyRight);
+var pyGreaterThan        = pyLeft.PyGreaterThan(pyRight);
+var pyGreaterThanOrEqual = pyLeft.PyGreaterThanOrEqual(pyRight);
+
+if (pyEquals) {
+	Console.WriteLine("No");
+}
+if (pyNotEquals) {
+	Console.WriteLine("Yes");
+}
+if (pyLessThan) {
+	Console.WriteLine("Yes");
+}
+if (pyLessThanOrEqual) {
+	Console.WriteLine("Yes");
+}
+if (pyGreaterThan) {
+	Console.WriteLine("No");
+}
+if (pyGreaterThanOrEqual) {
+	Console.WriteLine("No");
+}

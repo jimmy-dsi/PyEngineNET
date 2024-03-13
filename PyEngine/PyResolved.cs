@@ -31,6 +31,7 @@ internal class PyResolved: PyObject {
 	public override void Dispose() { }
 
 	internal override PyObject evaluate() => this;
+	internal override PyObject lazyEvaluate() => this;
 	internal override string getExpression() {
 		return Engine.PyExpression(_value);
 	}
@@ -64,6 +65,13 @@ internal class PyResolved: PyObject {
 				}
 				return dict;
 			}
+		} else if (value is List<object>) {
+			var v = (List<object>) value;
+			var list = new List<object>();
+			foreach (var item in v) {
+				list.Add(deserialize(item));
+			}
+			return list.ToArray();
 		} else if (value is object[]) {
 			var v = (object[]) value;
 			var list = new List<object>();
@@ -131,8 +139,19 @@ internal class PyResolved: PyObject {
 			// Handles: bool, string, HashSet<object>, Dictionary<object, object>, DataClassObject
 			return (T) _value;
 		} else {
-			//Console.WriteLine(_value.GetType());
 			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(T)}");
+		}
+	}
+	
+	internal override void AssignKeyValue(PyObject key, PyObject value) {
+		if (_value.GetType() == typeof(List<object>)) {
+			var v = (List<object>) _value;
+			v[key.Result] = ((PyResolved) value.Result).Value;
+		} else if (_value.GetType() == typeof(Dictionary<object, object>)) {
+			var v = (Dictionary<object, object>) _value;
+			v[key.Result] = ((PyResolved) value.Result).Value;
+		} else {
+			throw new InvalidOperationException($"Cannot perform index assignment on resolved non-list, non-dictionary PyObjects.");
 		}
 	}
 }

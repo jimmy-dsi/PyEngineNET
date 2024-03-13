@@ -8,8 +8,17 @@ internal abstract class PyOperation: PyObject {
 		return resultObject;
 	}
 
+	internal override PyObject lazyEvaluate() {
+		var resultObject = engine.Eval(getExpression());
+		return resultObject;
+	}
+
 	public override int GetHashCode() {
 		return Result.GetHashCode();
+	}
+	
+	internal override void AssignKeyValue(PyObject key, PyObject value) {
+		throw new InvalidOperationException($"PyObject representing a Python operation must be evaluated before performing index assignment.");
 	}
 }
 
@@ -619,7 +628,7 @@ internal class PyAccess: PyOperation {
 	}
 
 	internal override string getExpression() {
-		return $"{_value.getExpression()}.{_memberName}";
+		return $"({_value.getExpression()}).{_memberName}";
 	}
 }
 

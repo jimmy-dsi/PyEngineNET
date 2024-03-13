@@ -17,15 +17,8 @@ internal class PyProxy: PyObject, IDisposable {
 		return new(engine, gvarName);
 	}
 
-	public override PyObject GetProp(string propName) {
-		throw new NotImplementedException();
-	}
-
-	public override void SetProp(string propName, PyObject value) {
-		throw new NotImplementedException();
-	}
-
 	public override int GetHashCode() {
+		checkPyKey();
 		return Result.GetHashCode();
 	}
 
@@ -36,7 +29,17 @@ internal class PyProxy: PyObject, IDisposable {
 
 	// Conversions
 	public override T ConvertTo<T>() {
-		throw new NotImplementedException();
+		if (typeof(T) == typeof(PyObject)) {
+			return (T) (object) this;
+		} else {
+			checkPyKey();
+			return convertTo<T>();
+		}
+	}
+	
+	internal override void AssignKeyValue(PyObject key, PyObject value) {
+		checkPyKey();
+		engine.Exec($"{pyGVarName}[{key.Expression}] = {value.Expression}");
 	}
 
 	//
@@ -48,6 +51,12 @@ internal class PyProxy: PyObject, IDisposable {
 	internal override PyObject evaluate() {
 		checkPyKey();
 		var resultObject = engine.Eval(getExpression(), eager: true);
+		return resultObject;
+	}
+
+	internal override PyObject lazyEvaluate() {
+		checkPyKey();
+		var resultObject = engine.Eval(getExpression());
 		return resultObject;
 	}
 
@@ -70,7 +79,7 @@ internal class PyProxy: PyObject, IDisposable {
 		Dispose(disposing: false);
 	}
 
-	private void checkPyKey() {
+	internal void checkPyKey() {
 		if (_pyGVarName == null) {
 			throw new InvalidOperationException("Cannot perform operations on disposed PyObject.");
 		}

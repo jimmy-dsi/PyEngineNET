@@ -179,7 +179,7 @@ def ___ser(value):
 	elif dataclasses.is_dataclass(value):
 		dt = type(value)
 		return {
-			'___type': f'{dt.__module__}.{dt.__name__}',
+			'___type': dt.__name__ if dt.__module__ == '__main__' else f'{dt.__module__}.{dt.__name__}',
 			'___data': ___ser(
 				[
 					[x.name, ___ser(getattr(value, x.name))] \
@@ -189,36 +189,6 @@ def ___ser(value):
 		}
 	else:
 		return value # TODO: Raise error about un-serializable class
-
-
-# Main function
-def ___main(pipe_name):
-	print('Pipe name:', pipe_name)
-
-	global ___named_pipe
-	if platform.system() == 'Windows':
-		___named_pipe = WindowsNamedPipe(pipe_name)
-	else:
-		___named_pipe = UnixNamedPipe(pipe_name)
-
-	___result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
-	while True:
-		if ___result['cm'] == 'exec':
-			try:
-				print(___result['dt'])
-				exec(___result['dt'])
-			except Exception as e:
-				___result = ___catch_exec_eval(e)
-			else:
-				___result = ___send_and_recv({'cm': 'done'})
-		elif ___result['cm'] == 'eval':
-			try:
-				print(___result['dt'])
-				___value = eval(___result['dt'])
-			except Exception as e:
-				___result = ___catch_exec_eval(e)
-			else:
-				___result = ___send_and_recv({'cm': 'res', 'dt': ___ser(___value)})
 
 
 def ___call_cs_method(___func_name, *___args):
@@ -269,4 +239,32 @@ if __name__ == '__main__':
 	if len(sys.argv) < 2:
 		print('Usage: pyengine.exe <shared_pipe_name>')
 		sys.exit(1)
-	___main(sys.argv[1])
+
+	# Main body
+	pipe_name = sys.argv[1]
+	print('Pipe name:', pipe_name)
+
+	#global ___named_pipe
+	if platform.system() == 'Windows':
+		___named_pipe = WindowsNamedPipe(pipe_name)
+	else:
+		___named_pipe = UnixNamedPipe(pipe_name)
+
+	___result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
+	while True:
+		if ___result['cm'] == 'exec':
+			try:
+				print(___result['dt'])
+				exec(___result['dt'])
+			except Exception as e:
+				___result = ___catch_exec_eval(e)
+			else:
+				___result = ___send_and_recv({'cm': 'done'})
+		elif ___result['cm'] == 'eval':
+			try:
+				print(___result['dt'])
+				___value = eval(___result['dt'])
+			except Exception as e:
+				___result = ___catch_exec_eval(e)
+			else:
+				___result = ___send_and_recv({'cm': 'res', 'dt': ___ser(___value)})
