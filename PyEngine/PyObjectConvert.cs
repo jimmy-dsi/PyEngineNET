@@ -1,5 +1,7 @@
 ﻿namespace PyEngine;
 
+using System.Collections;
+
 public abstract partial class PyObject: IDisposable {
 	// Conversions
 	public static PyObject ConvertFrom<T>(T value) {
@@ -49,12 +51,15 @@ public abstract partial class PyObject: IDisposable {
 			return new PyResolved(Engine.Default, value!);
 		} else if (typeof(T) == typeof(DataClassObject)) {
 			return new PyResolved(Engine.Default, value!);
+		} else if (value is IEnumerable) {
+			var v = (IEnumerable) value;
+			return new PyResolved(Engine.Default, v.ToEnum().ToArray());
 		} else {
-			throw new NotImplementedException();
+			throw new InvalidOperationException($"Cannot convert object of type {value!.GetType()} to PyObject.");
 		}
 	}
 
-	public virtual T ConvertTo<T>() {
+	internal virtual T ConvertTo<T>() {
 		if (typeof(T) == typeof(PyObject)) {
 			return (T) (object) this;
 		} else {
@@ -62,9 +67,11 @@ public abstract partial class PyObject: IDisposable {
 		}
 	}
 
-	protected virtual T convertTo<T>() => Result.convertTo<T>();
+	protected virtual T       convertTo<T>()      => Result.convertTo<T>();
+	protected virtual T[]     convertToArray<T>() => Result.convertToArray<T>();
+	protected virtual List<T> convertToList<T>()  => Result.convertToList<T>();
 
-	// Implicit Conversions
+	// Implicit Conversions (To)
 	public static implicit operator bool                           (PyObject p) => p.convertTo<bool>();
 	public static implicit operator byte                           (PyObject p) => p.convertTo<byte>();
 	public static implicit operator sbyte                          (PyObject p) => p.convertTo<sbyte>();
@@ -89,7 +96,34 @@ public abstract partial class PyObject: IDisposable {
 	public static implicit operator Dictionary<object, object>     (PyObject p) => p.convertTo<Dictionary<object, object>>();
 	public static implicit operator Dictionary<PyObject, PyObject> (PyObject p) => p.convertTo<Dictionary<PyObject, PyObject>>();
 	public static implicit operator DataClassObject                (PyObject p) => p.convertTo<DataClassObject>();
-
+	// Containers of primitive types
+	public static implicit operator bool[]                         (PyObject p) => p.convertToArray<bool>();
+	public static implicit operator sbyte[]                        (PyObject p) => p.convertToArray<sbyte>();
+	public static implicit operator ushort[]                       (PyObject p) => p.convertToArray<ushort>();
+	public static implicit operator short[]                        (PyObject p) => p.convertToArray<short>();
+	public static implicit operator uint[]                         (PyObject p) => p.convertToArray<uint>();
+	public static implicit operator int[]                          (PyObject p) => p.convertToArray<int>();
+	public static implicit operator ulong[]                        (PyObject p) => p.convertToArray<ulong>();
+	public static implicit operator long[]                         (PyObject p) => p.convertToArray<long>();
+	public static implicit operator float[]                        (PyObject p) => p.convertToArray<float>();
+	public static implicit operator double[]                       (PyObject p) => p.convertToArray<double>();
+	public static implicit operator decimal[]                      (PyObject p) => p.convertToArray<decimal>();
+	public static implicit operator string[]                       (PyObject p) => p.convertToArray<string>();
+	//
+	public static implicit operator List<bool>                     (PyObject p) => p.convertToList<bool>();
+	public static implicit operator List<sbyte>                    (PyObject p) => p.convertToList<sbyte>();
+	public static implicit operator List<ushort>                   (PyObject p) => p.convertToList<ushort>();
+	public static implicit operator List<short>                    (PyObject p) => p.convertToList<short>();
+	public static implicit operator List<uint>                     (PyObject p) => p.convertToList<uint>();
+	public static implicit operator List<int>                      (PyObject p) => p.convertToList<int>();
+	public static implicit operator List<ulong>                    (PyObject p) => p.convertToList<ulong>();
+	public static implicit operator List<long>                     (PyObject p) => p.convertToList<long>();
+	public static implicit operator List<float>                    (PyObject p) => p.convertToList<float>();
+	public static implicit operator List<double>                   (PyObject p) => p.convertToList<double>();
+	public static implicit operator List<decimal>                  (PyObject p) => p.convertToList<decimal>();
+	public static implicit operator List<string>                   (PyObject p) => p.convertToList<string>();
+	
+	// Implicit Conversions (From)
 	public static implicit operator PyObject (bool                           o) => ConvertFrom(o);
 	public static implicit operator PyObject (byte                           o) => ConvertFrom(o);
 	public static implicit operator PyObject (sbyte                          o) => ConvertFrom(o);
@@ -114,4 +148,30 @@ public abstract partial class PyObject: IDisposable {
 	public static implicit operator PyObject (Dictionary<object, object>     o) => ConvertFrom(o);
 	public static implicit operator PyObject (Dictionary<PyObject, PyObject> o) => ConvertFrom(o);
 	public static implicit operator PyObject (DataClassObject                o) => ConvertFrom(o);
+	// Containers of primitive types
+	public static implicit operator PyObject (bool[]                         o) => ConvertFrom(o);
+	public static implicit operator PyObject (sbyte[]                        o) => ConvertFrom(o);
+	public static implicit operator PyObject (ushort[]                       o) => ConvertFrom(o);
+	public static implicit operator PyObject (short[]                        o) => ConvertFrom(o);
+	public static implicit operator PyObject (uint[]                         o) => ConvertFrom(o);
+	public static implicit operator PyObject (int[]                          o) => ConvertFrom(o);
+	public static implicit operator PyObject (ulong[]                        o) => ConvertFrom(o);
+	public static implicit operator PyObject (long[]                         o) => ConvertFrom(o);
+	public static implicit operator PyObject (float[]                        o) => ConvertFrom(o);
+	public static implicit operator PyObject (double[]                       o) => ConvertFrom(o);
+	public static implicit operator PyObject (decimal[]                      o) => ConvertFrom(o);
+	public static implicit operator PyObject (string[]                       o) => ConvertFrom(o);
+	//
+	public static implicit operator PyObject (List<bool>                     o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<sbyte>                    o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<ushort>                   o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<short>                    o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<uint>                     o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<int>                      o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<ulong>                    o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<long>                     o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<float>                    o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<double>                   o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<decimal>                  o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<string>                   o) => ConvertFrom(o);
 }

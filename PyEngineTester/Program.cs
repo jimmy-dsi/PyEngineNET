@@ -170,3 +170,13 @@ if (pyGreaterThan) {
 if (pyGreaterThanOrEqual) {
 	Console.WriteLine("No");
 }
+
+List<short> shorts = engine.Eval("[1, -17, 65535, 65536]");
+Console.WriteLine(Engine.PyExpression(shorts));
+ushort[] ushorts = engine.Eval("[1, -17, 65535, 65536]");
+Console.WriteLine(Engine.PyExpression(ushorts));
+PyObject pyShorts = ushorts;
+int[] ints = pyShorts;
+Console.WriteLine(Engine.PyExpression(ints));
+//object[] dates = new object[] { DateTime.Now };
+//PyObject pyDates = dates;

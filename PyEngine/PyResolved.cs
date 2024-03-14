@@ -12,22 +12,6 @@ internal class PyResolved: PyObject {
 		return _value.GetHashCode();
 	}
 
-	//public override bool Equals(object? obj) {
-	//	if (ReferenceEquals(this, obj)) {
-	//		return true;
-	//	}
-	//
-	//	if (ReferenceEquals(obj, null)) {
-	//		return false;
-	//	}
-	//
-	//	if (obj is PyResolved) {
-	//		return _value.Equals(((PyResolved) obj)._value);
-	//	}
-	//
-	//	throw new NotImplementedException();
-	//}
-
 	public override void Dispose() { }
 
 	internal override PyObject evaluate() => this;
@@ -79,8 +63,14 @@ internal class PyResolved: PyObject {
 				list.Add(deserialize(item));
 			}
 			return list.ToArray();
-		} else {
+		} else if (value is PyResolved v) {
+			return deserialize(v._value);		
+		} else if (value is PyObject) {
+			return deserialize(((PyResolved) ((PyObject) value).Result)._value);		
+		} else if (value.GetType().IsNumericType() || value is DataClassObject || value is bool || value is string || value is byte[] || value is List<byte> || value is HashSet<object>) {
 			return value;
+		} else {
+			throw new InvalidOperationException($"Cannot convert object of type {value.GetType()} to PyObject.");
 		}
 	}
 
@@ -140,6 +130,52 @@ internal class PyResolved: PyObject {
 			return (T) _value;
 		} else {
 			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(T)}");
+		}
+	}
+
+	protected override T[] convertToArray<T>() {
+		var vtype = _value.GetType();
+		if (vtype.IsListType<object>()) {
+			var arr = _value.AsListType<object[], object>();
+			return arr.Select(x => {
+				var xtype = x.GetType();
+				if (xtype.IsNumericType()) {
+					if (typeof(T).IsIntegerType()) {
+						return x.AsIntType<T>();
+					} else {
+						return x.AsDecimalType<T>();
+					}
+				} else if (xtype == typeof(T)) {
+					return (T) x;
+				} else {
+					throw new InvalidCastException($"Cannot cast element of PyObject to type {typeof(T)}");
+				}
+			}).ToArray();
+		} else {
+			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(T[])}");
+		}
+	}
+
+	protected override List<T> convertToList<T>() {
+		var vtype = _value.GetType();
+		if (vtype.IsListType<object>()) {
+			var arr = _value.AsListType<List<object>, object>();
+			return arr.Select(x => {
+				var xtype = x.GetType();
+				if (xtype.IsNumericType()) {
+					if (typeof(T).IsIntegerType()) {
+						return x.AsIntType<T>();
+					} else {
+						return x.AsDecimalType<T>();
+					}
+				} else if (xtype == typeof(T)) {
+					return (T) x;
+				} else {
+					throw new InvalidCastException($"Cannot cast element of PyObject to type {typeof(T)}");
+				}
+			}).ToList();
+		} else {
+			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(List<T>)}");
 		}
 	}
 	

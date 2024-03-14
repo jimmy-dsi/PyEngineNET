@@ -2,6 +2,7 @@
 
 using MessagePack;
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
@@ -229,6 +230,9 @@ public partial class Engine: IDisposable {
 		} else if (value is DataClassObject) {
 			var v = (DataClassObject) value;
 			return $"{v.ClassName}({string.Join(", ", v.PropNames.Select(x => $"{x}= {PyExpression(v[x])}"))})";
+		} else if (value is IEnumerable) {
+			var v = (IEnumerable) value;
+			return $"[{string.Join(", ", v.ToEnum().Select(PyExpression))}]";
 		} else {
 			throw new InvalidOperationException($"Cannot convert value of type `{vtype}` to a Python expression.");
 		}

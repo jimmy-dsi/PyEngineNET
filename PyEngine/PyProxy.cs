@@ -28,7 +28,7 @@ internal class PyProxy: PyObject, IDisposable {
 	}
 
 	// Conversions
-	public override T ConvertTo<T>() {
+	internal override T ConvertTo<T>() {
 		if (typeof(T) == typeof(PyObject)) {
 			return (T) (object) this;
 		} else {

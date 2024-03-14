@@ -1,5 +1,7 @@
 ﻿namespace PyEngine;
 
+using System.Collections;
+
 internal static partial class Util {
 	// Integer conversions
 	internal static byte AsByte(this object obj) {
@@ -348,5 +350,11 @@ internal static partial class Util {
 		return type == typeof(List<T>)
 		    || type == typeof(T[])
 		    || type == typeof(IEnumerable<T>);
+	}
+
+	internal static IEnumerable<object> ToEnum(this IEnumerable enumerable) {
+		foreach (var item in enumerable) {
+			yield return item;
+		}
 	}
 }
