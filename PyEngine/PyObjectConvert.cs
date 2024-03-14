@@ -51,6 +51,22 @@ public abstract partial class PyObject: IDisposable {
 			return new PyResolved(Engine.Default, value!);
 		} else if (typeof(T) == typeof(DataClassObject)) {
 			return new PyResolved(Engine.Default, value!);
+		} else if (typeof(T) == typeof(HashSet<bool>)
+		        || typeof(T) == typeof(HashSet<byte>)
+		        || typeof(T) == typeof(HashSet<sbyte>)
+		        || typeof(T) == typeof(HashSet<ushort>)
+		        || typeof(T) == typeof(HashSet<short>)
+		        || typeof(T) == typeof(HashSet<uint>)
+		        || typeof(T) == typeof(HashSet<int>)
+		        || typeof(T) == typeof(HashSet<ulong>)
+		        || typeof(T) == typeof(HashSet<long>)
+		        || typeof(T) == typeof(HashSet<float>)
+		        || typeof(T) == typeof(HashSet<double>)
+		        || typeof(T) == typeof(HashSet<decimal>)
+		        || typeof(T) == typeof(HashSet<string>))
+		{
+			var v = (IEnumerable) value!;
+			return new PyResolved(Engine.Default, v.ToEnum().ToHashSet());
 		} else if (value is IEnumerable) {
 			var v = (IEnumerable) value;
 			return new PyResolved(Engine.Default, v.ToEnum().ToArray());
@@ -70,6 +86,8 @@ public abstract partial class PyObject: IDisposable {
 	protected virtual T       convertTo<T>()      => Result.convertTo<T>();
 	protected virtual T[]     convertToArray<T>() => Result.convertToArray<T>();
 	protected virtual List<T> convertToList<T>()  => Result.convertToList<T>();
+
+	protected virtual HashSet<T> convertToSet<T>() => Result.convertToSet<T>();
 
 	// Implicit Conversions (To)
 	public static implicit operator bool                           (PyObject p) => p.convertTo<bool>();
@@ -122,6 +140,20 @@ public abstract partial class PyObject: IDisposable {
 	public static implicit operator List<double>                   (PyObject p) => p.convertToList<double>();
 	public static implicit operator List<decimal>                  (PyObject p) => p.convertToList<decimal>();
 	public static implicit operator List<string>                   (PyObject p) => p.convertToList<string>();
+	//
+	public static implicit operator HashSet<bool>                  (PyObject p) => p.convertToSet<bool>();
+	public static implicit operator HashSet<byte>                  (PyObject p) => p.convertToSet<byte>();
+	public static implicit operator HashSet<sbyte>                 (PyObject p) => p.convertToSet<sbyte>();
+	public static implicit operator HashSet<ushort>                (PyObject p) => p.convertToSet<ushort>();
+	public static implicit operator HashSet<short>                 (PyObject p) => p.convertToSet<short>();
+	public static implicit operator HashSet<uint>                  (PyObject p) => p.convertToSet<uint>();
+	public static implicit operator HashSet<int>                   (PyObject p) => p.convertToSet<int>();
+	public static implicit operator HashSet<ulong>                 (PyObject p) => p.convertToSet<ulong>();
+	public static implicit operator HashSet<long>                  (PyObject p) => p.convertToSet<long>();
+	public static implicit operator HashSet<float>                 (PyObject p) => p.convertToSet<float>();
+	public static implicit operator HashSet<double>                (PyObject p) => p.convertToSet<double>();
+	public static implicit operator HashSet<decimal>               (PyObject p) => p.convertToSet<decimal>();
+	public static implicit operator HashSet<string>                (PyObject p) => p.convertToSet<string>();
 	
 	// Implicit Conversions (From)
 	public static implicit operator PyObject (bool                           o) => ConvertFrom(o);
@@ -174,4 +206,18 @@ public abstract partial class PyObject: IDisposable {
 	public static implicit operator PyObject (List<double>                   o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<decimal>                  o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<string>                   o) => ConvertFrom(o);
+	//
+	public static implicit operator PyObject (HashSet<bool>                  o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<sbyte>                 o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<byte>                  o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<ushort>                o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<short>                 o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<uint>                  o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<int>                   o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<ulong>                 o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<long>                  o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<float>                 o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<double>                o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<decimal>               o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<string>                o) => ConvertFrom(o);
 }

@@ -178,6 +178,28 @@ internal class PyResolved: PyObject {
 			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(List<T>)}");
 		}
 	}
+
+	protected override HashSet<T> convertToSet<T>() {
+		var vtype = _value.GetType();
+		if (_value is HashSet<object> set) {
+			return set.Select(x => {
+				var xtype = x.GetType();
+				if (xtype.IsNumericType()) {
+					if (typeof(T).IsIntegerType()) {
+						return x.AsIntType<T>();
+					} else {
+						return x.AsDecimalType<T>();
+					}
+				} else if (xtype == typeof(T)) {
+					return (T) x;
+				} else {
+					throw new InvalidCastException($"Cannot cast element of PyObject to type {typeof(T)}");
+				}
+			}).ToHashSet();
+		} else {
+			throw new InvalidCastException($"Cannot cast PyObject to type {typeof(HashSet<T>)}");
+		}
+	}
 	
 	internal override void AssignKeyValue(PyObject key, PyObject value) {
 		if (_value.GetType() == typeof(List<object>)) {

@@ -67,8 +67,8 @@ public partial class Engine: IDisposable {
 	internal PyObject? len = null;
 	internal PyObject? str = null;
 
-	public PyObject Len => len ?? throw new InvalidOperationException("Engine instance has not been started.");
-	public PyObject Str => str ?? throw new InvalidOperationException("Engine instance has not been started.");
+	internal PyObject Len => len ?? throw new InvalidOperationException("Engine instance has not been started.");
+	internal PyObject Str => str ?? throw new InvalidOperationException("Engine instance has not been started.");
 
 	public void Start() {
 		Default = this;
@@ -230,6 +230,26 @@ public partial class Engine: IDisposable {
 		} else if (value is DataClassObject) {
 			var v = (DataClassObject) value;
 			return $"{v.ClassName}({string.Join(", ", v.PropNames.Select(x => $"{x}= {PyExpression(v[x])}"))})";
+		} else if (value is HashSet<bool>
+		        || value is HashSet<byte>
+		        || value is HashSet<sbyte>
+		        || value is HashSet<ushort>
+		        || value is HashSet<short>
+		        || value is HashSet<uint>
+		        || value is HashSet<int>
+		        || value is HashSet<ulong>
+		        || value is HashSet<long>
+		        || value is HashSet<float>
+		        || value is HashSet<double>
+		        || value is HashSet<decimal>
+		        || value is HashSet<string>)
+		{
+			var v = ((IEnumerable) value).ToEnum().ToHashSet();
+			if (v.Count == 0) {
+				return "set()";
+			} else {
+				return $"{{{string.Join(", ", v.Select(PyExpression))}}}";
+			}
 		} else if (value is IEnumerable) {
 			var v = (IEnumerable) value;
 			return $"[{string.Join(", ", v.ToEnum().Select(PyExpression))}]";
