@@ -12,21 +12,21 @@ internal class PyResolved: PyObject {
 		return _value.GetHashCode();
 	}
 
-	public override bool Equals(object? obj) {
-		if (ReferenceEquals(this, obj)) {
-			return true;
-		}
-
-		if (ReferenceEquals(obj, null)) {
-			return false;
-		}
-
-		if (obj is PyResolved) {
-			return _value.Equals(((PyResolved) obj)._value);
-		}
-
-		throw new NotImplementedException();
-	}
+	//public override bool Equals(object? obj) {
+	//	if (ReferenceEquals(this, obj)) {
+	//		return true;
+	//	}
+	//
+	//	if (ReferenceEquals(obj, null)) {
+	//		return false;
+	//	}
+	//
+	//	if (obj is PyResolved) {
+	//		return _value.Equals(((PyResolved) obj)._value);
+	//	}
+	//
+	//	throw new NotImplementedException();
+	//}
 
 	public override void Dispose() { }
 
