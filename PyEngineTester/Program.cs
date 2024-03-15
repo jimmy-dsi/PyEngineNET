@@ -189,3 +189,19 @@ if (pyGreaterThanOrEqual) {
 	HashSet<int> ints = pyShorts;
 	Console.WriteLine(Engine.PyExpression(ints));
 }
+
+var pyNone = engine.Eval("None", eager: true);
+Console.WriteLine(Engine.PyExpression(pyNone));
+
+int? nullable = pyNone;
+Console.WriteLine(Engine.PyExpression(nullable));
+PyObject z = nullable;
+Console.WriteLine(Engine.PyExpression(z));
+
+object[] nullArray = engine.Eval("[1, 2, None, 'Hello!']");
+Console.WriteLine(Engine.PyExpression(nullArray));
+PyObject q = nullArray;
+Console.WriteLine(Engine.PyExpression(q));
+
+string tests = engine.Eval("None");
+Console.WriteLine(Engine.PyExpression(tests));

@@ -237,7 +237,9 @@ public abstract partial class PyObject: IDisposable {
 		} else if (lhs is null || rhs is null) {
 			return false;
 		}
-		return lhs.Equals(((PyResolved) rhs.Result).Value);
+
+		var value = ((PyResolved) rhs.Result).Value;
+		return value is null ? lhs is null : lhs.Equals(value);
 	}
 
 	public static bool operator == (PyObject? lhs, object? rhs) {
@@ -246,7 +248,9 @@ public abstract partial class PyObject: IDisposable {
 		} else if (lhs is null || rhs is null) {
 			return false;
 		}
-		return ((PyResolved) lhs.Result).Value.Equals(rhs);
+
+		var value = ((PyResolved) lhs.Result).Value;
+		return value is null ? rhs is null : value.Equals(rhs);
 	}
 
 	public static bool operator == (PyObject? lhs, PyObject? rhs) {
@@ -255,7 +259,15 @@ public abstract partial class PyObject: IDisposable {
 		} else if (lhs is null || rhs is null) {
 			return false;
 		}
-		return ((PyResolved) lhs.Result).Value.Equals(((PyResolved) rhs.Result).Value);
+
+		var value1 = ((PyResolved) lhs.Result).Value;
+		var value2 = ((PyResolved) rhs.Result).Value;
+
+		if (value1 is null || value2 is null) {
+			return (value1 is null) == (value2 is null);
+		}
+
+		return value1.Equals(value2);
 	}
 
 	public static bool operator != (object? lhs, PyObject? rhs) {
@@ -264,7 +276,9 @@ public abstract partial class PyObject: IDisposable {
 		} else if (lhs is null || rhs is null) {
 			return true;
 		}
-		return !lhs.Equals(((PyResolved) rhs.Result).Value);
+		
+		var value = ((PyResolved) rhs.Result).Value;
+		return value is null ? lhs is not null : !lhs.Equals(value);
 	}
 
 	public static bool operator != (PyObject? lhs, object? rhs) {
@@ -273,7 +287,9 @@ public abstract partial class PyObject: IDisposable {
 		} else if (lhs is null || rhs is null) {
 			return true;
 		}
-		return !((PyResolved) lhs.Result).Value.Equals(rhs);
+
+		var value = ((PyResolved) lhs.Result).Value;
+		return value is null ? rhs is not null : !value.Equals(rhs);
 	}
 
 	public static bool operator != (PyObject? lhs, PyObject? rhs) {
@@ -282,26 +298,34 @@ public abstract partial class PyObject: IDisposable {
 		} else if (lhs is null || rhs is null) {
 			return true;
 		}
-		return !((PyResolved) lhs.Result).Value.Equals(((PyResolved) rhs.Result).Value);
+
+		var value1 = ((PyResolved) lhs.Result).Value;
+		var value2 = ((PyResolved) rhs.Result).Value;
+
+		if (value1 is null || value2 is null) {
+			return (value1 is null) != (value2 is null);
+		}
+
+		return !value1.Equals(value2);
 	}
 
-	public static bool operator < (object lhs, PyObject rhs) {
+	public static bool operator < (object? lhs, PyObject rhs) {
 		var rhsValue = ((PyResolved) rhs.Result).Value;
 		
 		if (lhs is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) < 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator < (PyObject lhs, object rhs) {
+	public static bool operator < (PyObject lhs, object? rhs) {
 		var lhsValue = ((PyResolved) lhs.Result).Value;
 		
 		if (lhsValue is IComparable v1 && rhs is IComparable v2) {
 			return v1.NumCompareTo(v2) < 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhs.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhs?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
@@ -312,27 +336,27 @@ public abstract partial class PyObject: IDisposable {
 		if (lhsValue is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) < 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator <= (object lhs, PyObject rhs) {
+	public static bool operator <= (object? lhs, PyObject rhs) {
 		var rhsValue = ((PyResolved) rhs.Result).Value;
 		
 		if (lhs is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) <= 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator <= (PyObject lhs, object rhs) {
+	public static bool operator <= (PyObject lhs, object? rhs) {
 		var lhsValue = ((PyResolved) lhs.Result).Value;
 		
 		if (lhsValue is IComparable v1 && rhs is IComparable v2) {
 			return v1.NumCompareTo(v2) <= 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhs.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhs?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
@@ -343,27 +367,27 @@ public abstract partial class PyObject: IDisposable {
 		if (lhsValue is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) <= 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator > (object lhs, PyObject rhs) {
+	public static bool operator > (object? lhs, PyObject rhs) {
 		var rhsValue = ((PyResolved) rhs.Result).Value;
 		
 		if (lhs is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) > 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator > (PyObject lhs, object rhs) {
+	public static bool operator > (PyObject lhs, object? rhs) {
 		var lhsValue = ((PyResolved) lhs.Result).Value;
 		
 		if (lhsValue is IComparable v1 && rhs is IComparable v2) {
 			return v1.NumCompareTo(v2) > 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhs.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhs?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
@@ -374,27 +398,27 @@ public abstract partial class PyObject: IDisposable {
 		if (lhsValue is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) > 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator >= (object lhs, PyObject rhs) {
+	public static bool operator >= (object? lhs, PyObject rhs) {
 		var rhsValue = ((PyResolved) rhs.Result).Value;
 		
 		if (lhs is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) >= 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhs?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
-	public static bool operator >= (PyObject lhs, object rhs) {
+	public static bool operator >= (PyObject lhs, object? rhs) {
 		var lhsValue = ((PyResolved) lhs.Result).Value;
 		
 		if (lhsValue is IComparable v1 && rhs is IComparable v2) {
 			return v1.NumCompareTo(v2) >= 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhs.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhs?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 
@@ -405,7 +429,7 @@ public abstract partial class PyObject: IDisposable {
 		if (lhsValue is IComparable v1 && rhsValue is IComparable v2) {
 			return v1.NumCompareTo(v2) >= 0;
 		} else {
-			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue.GetType()} and {rhsValue.GetType()}.");
+			throw new InvalidOperationException($"Cannot compare PyObjects of types {lhsValue?.GetType()?.ToString() ?? "null"} and {rhsValue?.GetType()?.ToString() ?? "null"}.");
 		}
 	}
 

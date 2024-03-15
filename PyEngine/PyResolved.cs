@@ -1,15 +1,15 @@
 ﻿namespace PyEngine;
 
 internal class PyResolved: PyObject {
-	private readonly object _value;
-	internal object Value => _value;
+	private readonly object? _value;
+	internal object? Value => _value;
 
-	public PyResolved(Engine? engine, object value): base(engine) {
+	public PyResolved(Engine? engine, object? value): base(engine) {
 		_value = deserialize(value);
 	}
 
 	public override int GetHashCode() {
-		return _value.GetHashCode();
+		return _value?.GetHashCode() ?? 0;
 	}
 
 	public override void Dispose() { }
@@ -21,15 +21,17 @@ internal class PyResolved: PyObject {
 	}
 
 	//
-	private object deserialize(object value) {
-		if (value is Dictionary<object, object>) {
-			var v = (Dictionary<object, object>) value;
+	private object? deserialize(object? value) {
+		if (value is null) {
+			return value;
+		} else if (value is Dictionary<object, object>) {
+			var v = (Dictionary<object, object>) value!;
 			if (v.ContainsKey("___type")) {
 				if (v.ContainsKey("___set")) {
-					return ((object[]) deserialize(v["___set"])).ToHashSet();
+					return ((object[]) deserialize(v["___set"])!).ToHashSet();
 				} else {
 					var className  = (string) v["___type"];
-					var properties = (object[]) deserialize(v["___data"]);
+					var properties = (object[]) deserialize(v["___data"])!;
 					var propDict   = new Dictionary<string, object>();
 					var propNames  = new string[properties.Length];
 
@@ -43,22 +45,22 @@ internal class PyResolved: PyObject {
 					return new DataClassObject(className, propNames, propDict);
 				}
 			} else {
-				var dict = new Dictionary<object, object>();
+				var dict = new Dictionary<object, object?>();
 				foreach (var item in v) {
-					dict[deserialize(item.Key)] = deserialize(item.Value);
+					dict[deserialize(item.Key)!] = deserialize(item.Value);
 				}
 				return dict;
 			}
-		} else if (value is List<object>) {
-			var v = (List<object>) value;
-			var list = new List<object>();
+		} else if (value is List<object?>) {
+			var v = (List<object?>) value;
+			var list = new List<object?>();
 			foreach (var item in v) {
 				list.Add(deserialize(item));
 			}
 			return list.ToArray();
-		} else if (value is object[]) {
-			var v = (object[]) value;
-			var list = new List<object>();
+		} else if (value is object?[]) {
+			var v = (object?[]) value;
+			var list = new List<object?>();
 			foreach (var item in v) {
 				list.Add(deserialize(item));
 			}
@@ -76,16 +78,20 @@ internal class PyResolved: PyObject {
 
 	// Conversion
 	protected override T convertTo<T>() {
-		if (typeof(T).IsIntegerType() && _value.GetType().IsIntegerType()) {
+		if (_value is null) {
+			return typeof(T).IsNullableType() ? default(T) : throw new NullReferenceException();
+		}
+
+		if (typeof(T).IsIntegerType() && _value!.GetType().IsIntegerType()) {
 			// Handles: byte, sbyte, ushort, short, uint, int, ulong, long
 			return _value.AsIntType<T>();
-		} else if (typeof(T).IsDecimalType() && _value.GetType().IsNumericType()) {
+		} else if (typeof(T).IsDecimalType() && _value!.GetType().IsNumericType()) {
 			// Handles: float, double, decimal
 			return _value.AsDecimalType<T>();
-		} else if (typeof(T).IsListType<object>() && _value.GetType().IsListType<object>()) {
+		} else if (typeof(T).IsListType<object>() && _value!.GetType().IsListType<object>()) {
 			// Handles: object[], List<object>
 			return _value.AsListType<T, object>();
-		} else if (typeof(T).IsListType<PyObject>() && _value.GetType().IsListType<object>()) {
+		} else if (typeof(T).IsListType<PyObject>() && _value!.GetType().IsListType<object>()) {
 			// Handles: PyObject[], List<PyObject>
 			var arr = _value.AsListType<object[], object>();
 			var result = new PyObject[arr.Length];
@@ -95,7 +101,7 @@ internal class PyResolved: PyObject {
 			}
 
 			return result.AsListType<T, PyObject>();
-		} else if (typeof(T) == typeof(HashSet<PyObject>) && _value.GetType() == typeof(HashSet<object>)) {
+		} else if (typeof(T) == typeof(HashSet<PyObject>) && _value!.GetType() == typeof(HashSet<object>)) {
 			// Handles: HashSet<PyObject>
 			var set = (HashSet<object>) _value;
 			var result = new HashSet<PyObject>();
@@ -105,7 +111,7 @@ internal class PyResolved: PyObject {
 			}
 
 			return (T) (object) result;
-		} else if (typeof(T) == typeof(Dictionary<PyObject, PyObject>) && _value.GetType() == typeof(Dictionary<object, object>)) {
+		} else if (typeof(T) == typeof(Dictionary<PyObject, PyObject>) && _value!.GetType() == typeof(Dictionary<object, object>)) {
 			// Handles: Dictionary<PyObject, PyObject>
 			var dict = (Dictionary<object, object>) _value;
 			var result = new Dictionary<PyObject, PyObject>();
@@ -115,7 +121,7 @@ internal class PyResolved: PyObject {
 			}
 
 			return (T) (object) result;
-		} else if (typeof(T).IsListType<byte>() && _value.GetType().IsListType<byte>()) {
+		} else if (typeof(T).IsListType<byte>() && _value!.GetType().IsListType<byte>()) {
 			// Handles: byte[], List<byte>
 			var arr = _value.AsListType<byte[], byte>();
 			var result = new byte[arr.Length];
@@ -125,7 +131,7 @@ internal class PyResolved: PyObject {
 			}
 
 			return result.AsListType<T, byte>();
-		} else if (typeof(T) == _value.GetType()) {
+		} else if (typeof(T) == _value!.GetType()) {
 			// Handles: bool, string, HashSet<object>, Dictionary<object, object>, DataClassObject
 			return (T) _value;
 		} else {
@@ -134,7 +140,7 @@ internal class PyResolved: PyObject {
 	}
 
 	protected override T[] convertToArray<T>() {
-		var vtype = _value.GetType();
+		var vtype = _value!.GetType();
 		if (vtype.IsListType<object>()) {
 			var arr = _value.AsListType<object[], object>();
 			return arr.Select(x => {
@@ -157,7 +163,7 @@ internal class PyResolved: PyObject {
 	}
 
 	protected override List<T> convertToList<T>() {
-		var vtype = _value.GetType();
+		var vtype = _value!.GetType();
 		if (vtype.IsListType<object>()) {
 			var arr = _value.AsListType<List<object>, object>();
 			return arr.Select(x => {
@@ -180,7 +186,7 @@ internal class PyResolved: PyObject {
 	}
 
 	protected override HashSet<T> convertToSet<T>() {
-		var vtype = _value.GetType();
+		var vtype = _value!.GetType();
 		if (_value is HashSet<object> set) {
 			return set.Select(x => {
 				var xtype = x.GetType();
@@ -202,11 +208,11 @@ internal class PyResolved: PyObject {
 	}
 	
 	internal override void AssignKeyValue(PyObject key, PyObject value) {
-		if (_value.GetType() == typeof(List<object>)) {
-			var v = (List<object>) _value;
+		if (_value!.GetType() == typeof(List<object?>)) {
+			var v = (List<object?>) _value;
 			v[key.Result] = ((PyResolved) value.Result).Value;
-		} else if (_value.GetType() == typeof(Dictionary<object, object>)) {
-			var v = (Dictionary<object, object>) _value;
+		} else if (_value.GetType() == typeof(Dictionary<object, object?>)) {
+			var v = (Dictionary<object, object?>) _value;
 			v[key.Result] = ((PyResolved) value.Result).Value;
 		} else {
 			throw new InvalidOperationException($"Cannot perform index assignment on resolved non-list, non-dictionary PyObjects.");

@@ -178,7 +178,11 @@ public partial class Engine: IDisposable {
 		}
 	}
 
-	public static string PyExpression(object value) {
+	public static string PyExpression(object? value) {
+		if (value is null) {
+			return "None";
+		}
+
 		var vtype = value.GetType();
 		if (value is PyObject) {
 			return PyExpression(((PyResolved) ((PyObject) value).Result).Value);

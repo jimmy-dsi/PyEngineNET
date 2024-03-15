@@ -352,6 +352,11 @@ internal static partial class Util {
 		    || type == typeof(IEnumerable<T>);
 	}
 
+	internal static bool IsNullableType(this Type type) {
+		return Nullable.GetUnderlyingType(type) != null
+		    || !type.IsValueType;
+	}
+
 	internal static IEnumerable<object> ToEnum(this IEnumerable enumerable) {
 		foreach (var item in enumerable) {
 			yield return item;
