@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
+[DebuggerDisplay("PyObject")]
 public abstract partial class PyObject: IDisposable {
 	public class Accessor {
 		private readonly PyObject _pyObject;
@@ -88,6 +89,10 @@ public abstract partial class PyObject: IDisposable {
 
 	public virtual void SetProp(string propName, PyObject value) {
 		Attr[propName] = value;
+	}
+
+	public override string ToString() {
+		return Engine.PyExpression(this);
 	}
 
 	public abstract void Dispose();

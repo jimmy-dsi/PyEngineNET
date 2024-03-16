@@ -108,7 +108,7 @@ public partial class Engine: IDisposable {
 		var ready = receive();
 		// Make sure we receive a signal from the desired sub-process. Otherwise, report an error.
 		if ((string?) ready?["cm"] == "ready" && ready?["dt"]?.ForceInt() == _subProcess.Id) {
-			Console.WriteLine("Python is ready!");
+			//Console.WriteLine("Python is ready!");
 		} else {
 			_pipeServer.Close();
 			throw new InvalidDataException("Process connected to named pipe does not match expected process ID.");
@@ -342,8 +342,10 @@ public partial class Engine: IDisposable {
 		} catch (OutOfMemoryException) {
 			throw new PipeDataException("Data too large for pipe");
 		}
+
 		_pipeStreamWriter.Write(bytes.Length);
 		_pipeStreamWriter.Write(bytes);
+		_pipeStreamWriter.Flush();
 
 		// Now, receive
 		return receive();

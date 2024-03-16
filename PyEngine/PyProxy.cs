@@ -1,5 +1,7 @@
 ﻿namespace PyEngine;
+using System.Diagnostics;
 
+[DebuggerDisplay("PyProxy")]
 internal class PyProxy: PyObject, IDisposable {
 	private string? _pyGVarName;
 	private bool _disposedValue;

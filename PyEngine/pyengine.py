@@ -197,7 +197,7 @@ def ___call_cs_method(___func_name, *___args):
 	while True:
 		if ___result['cm'] == 'exec':
 			try:
-				print(___result['dt'])
+				#print(___result['dt'])
 				exec(___result['dt'])
 			except Exception as e:
 				___result = ___catch_exec_eval(e)
@@ -205,7 +205,7 @@ def ___call_cs_method(___func_name, *___args):
 				___result = ___send_and_recv({'cm': 'done'})
 		elif ___result['cm'] == 'eval':
 			try:
-				print(___result['dt'])
+				#print(___result['dt'])
 				___value = eval(___result['dt'])
 			except Exception as e:
 				___result = ___catch_exec_eval(e)
@@ -242,7 +242,7 @@ if __name__ == '__main__':
 
 	# Main body
 	pipe_name = sys.argv[1]
-	print('Pipe name:', pipe_name)
+	#print('Pipe name:', pipe_name)
 
 	#global ___named_pipe
 	if platform.system() == 'Windows':
@@ -250,11 +250,12 @@ if __name__ == '__main__':
 	else:
 		___named_pipe = UnixNamedPipe(pipe_name)
 
+	___pye_var___None = None
+
 	___result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
 	while True:
 		if ___result['cm'] == 'exec':
 			try:
-				print(___result['dt'])
 				exec(___result['dt'])
 			except Exception as e:
 				___result = ___catch_exec_eval(e)
@@ -262,7 +263,6 @@ if __name__ == '__main__':
 				___result = ___send_and_recv({'cm': 'done'})
 		elif ___result['cm'] == 'eval':
 			try:
-				print(___result['dt'])
 				___value = eval(___result['dt'])
 			except Exception as e:
 				___result = ___catch_exec_eval(e)

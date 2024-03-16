@@ -1,5 +1,7 @@
 ﻿namespace PyEngine;
+using System.Diagnostics;
 
+[DebuggerDisplay("PyOperations")]
 internal abstract class PyOperation: PyObject {
 	internal PyOperation(Engine? engine): base(engine) { }
 
@@ -23,6 +25,7 @@ internal abstract class PyOperation: PyObject {
 }
 
 
+[DebuggerDisplay("PyAddition")]
 internal class PyAddition: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -43,6 +46,7 @@ internal class PyAddition: PyOperation {
 }
 
 
+[DebuggerDisplay("PySubtraction")]
 internal class PySubtraction: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -63,6 +67,7 @@ internal class PySubtraction: PyOperation {
 }
 
 
+[DebuggerDisplay("PyMultiplication")]
 internal class PyMultiplication: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -83,6 +88,7 @@ internal class PyMultiplication: PyOperation {
 }
 
 
+[DebuggerDisplay("PyDivision")]
 internal class PyDivision: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -103,6 +109,7 @@ internal class PyDivision: PyOperation {
 }
 
 
+[DebuggerDisplay("PyFloorDivision")]
 internal class PyFloorDivision: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -123,6 +130,7 @@ internal class PyFloorDivision: PyOperation {
 }
 
 
+[DebuggerDisplay("PyModulo")]
 internal class PyModulo: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -143,6 +151,7 @@ internal class PyModulo: PyOperation {
 }
 
 
+[DebuggerDisplay("PyExponentiation")]
 internal class PyExponentiation: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -163,6 +172,7 @@ internal class PyExponentiation: PyOperation {
 }
 
 
+[DebuggerDisplay("PyBitwiseAnd")]
 internal class PyBitwiseAnd: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -183,6 +193,7 @@ internal class PyBitwiseAnd: PyOperation {
 }
 
 
+[DebuggerDisplay("PyBitwiseOr")]
 internal class PyBitwiseOr: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -203,6 +214,7 @@ internal class PyBitwiseOr: PyOperation {
 }
 
 
+[DebuggerDisplay("PyBitwiseXor")]
 internal class PyBitwiseXor: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -223,6 +235,7 @@ internal class PyBitwiseXor: PyOperation {
 }
 
 
+[DebuggerDisplay("PyBitshiftLeft")]
 internal class PyBitshiftLeft: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -243,6 +256,7 @@ internal class PyBitshiftLeft: PyOperation {
 }
 
 
+[DebuggerDisplay("PyBitshiftRight")]
 internal class PyBitshiftRight: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -263,6 +277,7 @@ internal class PyBitshiftRight: PyOperation {
 }
 
 
+[DebuggerDisplay("PyEquality")]
 internal class PyEquality: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -283,6 +298,7 @@ internal class PyEquality: PyOperation {
 }
 
 
+[DebuggerDisplay("PyInequality")]
 internal class PyInequality: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -303,6 +319,7 @@ internal class PyInequality: PyOperation {
 }
 
 
+[DebuggerDisplay("PyLessThan")]
 internal class PyLessThan: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -323,6 +340,7 @@ internal class PyLessThan: PyOperation {
 }
 
 
+[DebuggerDisplay("PyLessThanOrEqual")]
 internal class PyLessThanOrEqual: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -343,6 +361,7 @@ internal class PyLessThanOrEqual: PyOperation {
 }
 
 
+[DebuggerDisplay("PyGreaterThan")]
 internal class PyGreaterThan: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -363,6 +382,7 @@ internal class PyGreaterThan: PyOperation {
 }
 
 
+[DebuggerDisplay("PyGreaterThanOrEqual")]
 internal class PyGreaterThanOrEqual: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -383,6 +403,7 @@ internal class PyGreaterThanOrEqual: PyOperation {
 }
 
 
+[DebuggerDisplay("PyInclusion")]
 internal class PyInclusion: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -403,6 +424,7 @@ internal class PyInclusion: PyOperation {
 }
 
 
+[DebuggerDisplay("PyExclusion")]
 internal class PyExclusion: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -423,6 +445,7 @@ internal class PyExclusion: PyOperation {
 }
 
 
+[DebuggerDisplay("PyRefEquality")]
 internal class PyRefEquality: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -443,6 +466,7 @@ internal class PyRefEquality: PyOperation {
 }
 
 
+[DebuggerDisplay("PyRefInequality")]
 internal class PyRefInequality: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -463,6 +487,7 @@ internal class PyRefInequality: PyOperation {
 }
 
 
+[DebuggerDisplay("PyLogicalAnd")]
 internal class PyLogicalAnd: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -483,6 +508,7 @@ internal class PyLogicalAnd: PyOperation {
 }
 
 
+[DebuggerDisplay("PyLogicalOr")]
 internal class PyLogicalOr: PyOperation {
 	private PyObject _lhs;
 	private PyObject _rhs;
@@ -503,6 +529,7 @@ internal class PyLogicalOr: PyOperation {
 }
 
 
+[DebuggerDisplay("PyIdentity")]
 internal class PyIdentity: PyOperation {
 	private PyObject _value;
 
@@ -520,6 +547,7 @@ internal class PyIdentity: PyOperation {
 }
 
 
+[DebuggerDisplay("PyNegation")]
 internal class PyNegation: PyOperation {
 	private PyObject _value;
 
@@ -537,6 +565,7 @@ internal class PyNegation: PyOperation {
 }
 
 
+[DebuggerDisplay("PyBitwiseNegation")]
 internal class PyBitwiseNegation: PyOperation {
 	private PyObject _value;
 
@@ -554,6 +583,7 @@ internal class PyBitwiseNegation: PyOperation {
 }
 
 
+[DebuggerDisplay("PyLogicalNegation")]
 internal class PyLogicalNegation: PyOperation {
 	private PyObject _value;
 
@@ -571,6 +601,7 @@ internal class PyLogicalNegation: PyOperation {
 }
 
 
+[DebuggerDisplay("PySplat")]
 internal class PySplat: PyOperation {
 	private PyObject _value;
 
@@ -588,6 +619,7 @@ internal class PySplat: PyOperation {
 }
 
 
+[DebuggerDisplay("PyInvokation")]
 internal class PyInvokation: PyOperation {
 	private PyObject   _value;
 	private PyObject[] _params;
@@ -614,6 +646,7 @@ internal class PyInvokation: PyOperation {
 }
 
 
+[DebuggerDisplay("PyAccess")]
 internal class PyAccess: PyOperation {
 	private PyObject _value;
 	private string   _memberName;
@@ -633,6 +666,7 @@ internal class PyAccess: PyOperation {
 }
 
 
+[DebuggerDisplay("PyKeyLookup")]
 internal class PyKeyLookup: PyOperation {
 	private PyObject _value;
 	private PyObject _key;
