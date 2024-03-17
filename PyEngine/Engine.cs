@@ -131,8 +131,8 @@ public partial class Engine: IDisposable {
 					break;
 
 				case "err": {
-					var excInfo = (object[]) result["dt"];
-					throw new PyException((string) excInfo[0], (string) excInfo[1]);
+					var excInfo = (PyObject[]) (PyObject) (object?[]) result["dt"];
+					throw new PyException((string) excInfo[0], (string) excInfo[1], (PyObject[]) excInfo[2]);
 				}
 
 				case "done":

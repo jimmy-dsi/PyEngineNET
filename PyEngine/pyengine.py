@@ -5,6 +5,7 @@ import msgpack
 import struct
 import socket
 import dataclasses
+import traceback
 if platform.system() == 'Windows':
 	import win32file
 	import pywintypes
@@ -218,12 +219,26 @@ def ___call_cs_method(___func_name, *___args):
 			raise NETException(err_info[0], err_info[1])
 
 
+def ___exc_dict(e):
+	return {
+		'cm': 'err',
+		'dt': [
+			str(type(e)),
+			str(e),
+			[
+				(x.filename, x.lineno, x.name, x.line)
+				for x in traceback.extract_tb(e.__traceback__)
+			]
+		]
+	}
+
+
 def ___catch_exec_eval(e):
 	if isinstance(e, NETException):
 		___net_exc_handler(e)
 	else:
 		___py_exc_handler(e)
-	return ___send_and_recv({'cm': 'err', 'dt': [str(type(e)), str(e)]})
+	return ___send_and_recv(___exc_dict(e))
 
 
 def ___send_and_recv(data_dict):
@@ -231,7 +246,7 @@ def ___send_and_recv(data_dict):
 	try:
 		___named_pipe.write(msgpack.packb(data_dict))
 	except PipeDataException as e:
-		___named_pipe.write(msgpack.packb({'cm': 'err', 'dt': [str(type(e)), e.message]}))
+		___named_pipe.write(msgpack.packb(___exc_dict(e)))
 	return msgpack.unpackb(___named_pipe.read())
 
 
