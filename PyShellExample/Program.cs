@@ -7,12 +7,36 @@ var Print = engine.Eval("print");
 var Repr  = engine.Eval("repr");
 
 engine.Exec("import sys");
-engine.Exec("print(f'Python {sys.version}')");
+engine.Exec("import platform");
+engine.Exec("print(f'Python {sys.version} on {sys.platform}')");
+engine.Exec("del sys");
+engine.Exec("del platform");
 engine.Exec("""
 def def_exc_handler(ex):
 	return
 """);
 engine.SetExceptionHandler("def_exc_handler");
+	
+// Add example C# function to demonstrate Python/.NET interop
+engine.BindFunction("net_factorize", (long n) => {
+	var factors = new List<long>();
+	for (long i = 2; i <= n/2; i++) {
+		if (n % i == 0) {
+			factors.Add(i);
+		}
+	}
+	return factors.ToArray();
+});
+
+// Add Python equivalent for comparison
+engine.Exec("""
+def py_factorize(n):
+	factors = []
+	for i in range(2, n//2 + 1):
+		if n % i == 0:
+			factors.append(i)
+	return factors
+""");
 
 var execInProgress = false;
 
@@ -42,12 +66,12 @@ try {
 
 		try {
 			var success = TryEval(pyCode);
-			if (success) continue;
-			engine.Exec(pyCode); // Fall back to executing if it cannot be evaluated as an expression.
+			if (!success) engine.Exec(pyCode); // Fall back to executing if it cannot be evaluated as an expression.
 		} catch (PyException ex) {
 			if (ex.PyExceptionType is "SyntaxError" or "IndentationError") {
 				var messageSplit = ex.PyMessage.Split('(');
 				var fileInfo = messageSplit[1].Split(')')[0].Split(',');
+
 				Console.WriteLine($"  File \"{fileInfo[0]}\", {fileInfo[1].Trim()}");
 				Console.WriteLine($"    {pyCode}");
 				Console.WriteLine($"{ex.PyExceptionType}: {messageSplit[0]}");

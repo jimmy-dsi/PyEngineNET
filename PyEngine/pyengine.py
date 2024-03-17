@@ -11,7 +11,7 @@ if platform.system() == 'Windows':
 	import win32file
 	import pywintypes
 
-___named_pipe = None
+named_pipe = None
 
 # Classes
 class NETException(Exception):
@@ -156,7 +156,7 @@ class WindowsNamedPipe(NamedPipe):
 			raise
 
 
-# Default exception handlers. A .NET engine can override these via `engine.Exec("def ___exc_handler(ex): ...")`
+# Default exception handlers. A .NET engine can override these via `engine.Exec("def exc_handler(ex): ...")`
 def ___exc_handler(ex):
 	print(ex, file=sys.stderr)
 
@@ -168,24 +168,24 @@ def ___net_exc_handler(ex):
 
 
 # Serializer
-___primitives = (bool, int, float, str, bytes, bytearray, tuple, type(None))
-def ___ser(value):
-	if isinstance(value, ___primitives):
+primitives = (bool, int, float, str, bytes, bytearray, tuple, type(None))
+def ser(value):
+	if isinstance(value, primitives):
 		return value
 	elif isinstance(value, list):
-		return [___ser(x) for x in value]
+		return [ser(x) for x in value]
 	elif isinstance(value, dict):
-		return {___ser(k): ___ser(v) for k, v in value.items()}
+		return {ser(k): ser(v) for k, v in value.items()}
 	elif isinstance(value, set):
-		return {'___type': 'set', '___set': ___ser(list(value))}
+		return {'___type': 'set', '___set': ser(list(value))}
 	elif dataclasses.is_dataclass(value):
 		dt = type(value)
 		return {
-			'___type': dt.__name__ if dt.__module__ == '__main__' else f'{dt.__module__}.{dt.__name__}',
-			'___data': ___ser(
+			'___type': dt.__name__ if dt.__module__ in {'__main__', 'builtins'} else f'{dt.__module__}.{dt.__name__}',
+			'___data': ser(
 				[
-					[x.name, ___ser(getattr(value, x.name))] \
-						for x in dataclasses.fields(dt)
+					[x.name, ser(getattr(value, x.name))]
+					for x in dataclasses.fields(dt)
 				]
 			)
 		}
@@ -193,34 +193,53 @@ def ___ser(value):
 		return value # TODO: Raise error about un-serializable class
 
 
-def ___call_cs_method(___func_name, *___args):
-	___result = ___send_and_recv({'cm': 'call', 'func': ___func_name})
+def ___call_cs_method(func_name, *___args):
+	result = send_and_recv({'cm': 'call', 'func': func_name})
+
+	global _globals
+	_locals = {'___args': ___args}
 
 	while True:
-		if ___result['cm'] == 'exec':
+		if result['cm'] == 'exec':
 			try:
-				#print(___result['dt'])
-				exec(___result['dt'])
+				exec(result['dt'], _globals, _locals)
 			except Exception as e:
-				___result = ___catch_exec_eval(e)
+				update_globals()
+				result = catch_exec_eval(e)
 			else:
-				___result = ___send_and_recv({'cm': 'done'})
-		elif ___result['cm'] == 'eval':
+				update_globals()
+				result = send_and_recv({'cm': 'done'})
+		elif result['cm'] == 'eval':
 			try:
-				#print(___result['dt'])
-				___value = eval(___result['dt'])
+				value = eval(result['dt'], _globals, _locals)
 			except Exception as e:
-				___result = ___catch_exec_eval(e)
+				update_globals()
+				result = catch_exec_eval(e)
 			else:
-				___result = ___send_and_recv({'cm': 'res', 'dt': ___ser(___value)})
-		elif ___result['cm'] == 'retn':
-			return eval(___result['dt'])
-		elif ___result['cm'] == 'err':
-			err_info = ___result['dt']
+				update_globals()
+				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
+		elif result['cm'] == 'retn':
+			# TODO: Account for exceptions in return evaluation
+			res = eval(result['dt'], _globals, _locals)
+			update_globals()
+			return res
+		elif result['cm'] == 'err':
+			err_info = result['dt']
 			raise NETException(err_info[0], err_info[1])
 
 
-def ___exc_dict(e):
+def update_globals():
+	global _globals, ___exc_handler, ___py_exc_handler, ___net_exc_handler, ___call_cs_method, ___pye_var___None
+	# Back-update handler globals in driver
+	___exc_handler     = _globals['___exc_handler']
+	___py_exc_handler  = _globals['___py_exc_handler']
+	___net_exc_handler = _globals['___net_exc_handler']
+	# Reset visible globals to .NET process
+	_globals['___call_cs_method'] = ___call_cs_method
+	_globals['___pye_var___None'] = ___pye_var___None
+
+
+def exc_dict(e):
 	dt = type(e)
 	return {
 		'cm': 'err',
@@ -235,21 +254,21 @@ def ___exc_dict(e):
 	}
 
 
-def ___catch_exec_eval(e):
+def catch_exec_eval(e):
 	if isinstance(e, NETException):
 		___net_exc_handler(e)
 	else:
 		___py_exc_handler(e)
-	return ___send_and_recv(___exc_dict(e))
+	return send_and_recv(exc_dict(e))
 
 
-def ___send_and_recv(data_dict):
-	global ___named_pipe
+def send_and_recv(data_dict):
+	global named_pipe
 	try:
-		___named_pipe.write(msgpack.packb(data_dict))
+		named_pipe.write(msgpack.packb(data_dict))
 	except PipeDataException as e:
-		___named_pipe.write(msgpack.packb(___exc_dict(e)))
-	return msgpack.unpackb(___named_pipe.read())
+		named_pipe.write(msgpack.packb(exc_dict(e)))
+	return msgpack.unpackb(named_pipe.read())
 
 
 if __name__ == '__main__':
@@ -263,29 +282,40 @@ if __name__ == '__main__':
 	pipe_name = sys.argv[1]
 	#print('Pipe name:', pipe_name)
 
-	#global ___named_pipe
+	#global named_pipe
 	if platform.system() == 'Windows':
-		___named_pipe = WindowsNamedPipe(pipe_name)
+		named_pipe = WindowsNamedPipe(pipe_name)
 	else:
-		___named_pipe = UnixNamedPipe(pipe_name)
+		named_pipe = UnixNamedPipe(pipe_name)
 
 	___pye_var___None = None
 
-	del pipe_name
+	# Security: Only allow some globals to be available for exec/eval
+	_globals = {
+		'___call_cs_method':  ___call_cs_method,
+		'___pye_var___None':  ___pye_var___None,
+		'___exc_handler':     ___exc_handler,
+		'___py_exc_handler':  ___py_exc_handler,
+		'___net_exc_handler': ___net_exc_handler,
+	}
 
-	___result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
+	result = send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
 	while True:
-		if ___result['cm'] == 'exec':
+		if result['cm'] == 'exec':
 			try:
-				exec(___result['dt'])
+				exec(result['dt'], _globals)
 			except Exception as e:
-				___result = ___catch_exec_eval(e)
+				update_globals()
+				result = catch_exec_eval(e)
 			else:
-				___result = ___send_and_recv({'cm': 'done'})
-		elif ___result['cm'] == 'eval':
+				update_globals()
+				result = send_and_recv({'cm': 'done'})
+		elif result['cm'] == 'eval':
 			try:
-				___value = eval(___result['dt'])
+				value = eval(result['dt'], _globals)
 			except Exception as e:
-				___result = ___catch_exec_eval(e)
+				update_globals()
+				result = catch_exec_eval(e)
 			else:
-				___result = ___send_and_recv({'cm': 'res', 'dt': ___ser(___value)})
+				update_globals()
+				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
