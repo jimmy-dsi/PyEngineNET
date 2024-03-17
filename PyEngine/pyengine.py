@@ -6,6 +6,7 @@ import struct
 import socket
 import dataclasses
 import traceback
+import signal
 if platform.system() == 'Windows':
 	import win32file
 	import pywintypes
@@ -220,10 +221,11 @@ def ___call_cs_method(___func_name, *___args):
 
 
 def ___exc_dict(e):
+	dt = type(e)
 	return {
 		'cm': 'err',
 		'dt': [
-			str(type(e)),
+			dt.__name__ if dt.__module__ in {'__main__', 'builtins'} else f'{dt.__module__}.{dt.__name__}',
 			str(e),
 			[
 				(x.filename, x.lineno, x.name, x.line)
@@ -251,6 +253,8 @@ def ___send_and_recv(data_dict):
 
 
 if __name__ == '__main__':
+	signal.signal(signal.SIGINT, signal.SIG_IGN) # Ignore keyboard interrupts
+
 	if len(sys.argv) < 2:
 		print('Usage: pyengine.exe <shared_pipe_name>')
 		sys.exit(1)
@@ -266,6 +270,8 @@ if __name__ == '__main__':
 		___named_pipe = UnixNamedPipe(pipe_name)
 
 	___pye_var___None = None
+
+	del pipe_name
 
 	___result = ___send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})
 	while True:

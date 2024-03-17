@@ -120,6 +120,8 @@ public partial class Engine: IDisposable {
 		}
 	}
 
+	public void Exec(PyObject pyObject) => Exec(pyObject.ToString());
+
 	public void Exec(string pythonCode) {
 		Default = this;
 		
@@ -131,7 +133,7 @@ public partial class Engine: IDisposable {
 					break;
 
 				case "err": {
-					var excInfo = (PyObject[]) (PyObject) (object?[]) result["dt"];
+					var excInfo = (PyObject[]) (PyObject) (object[]) result["dt"];
 					throw new PyException((string) excInfo[0], (string) excInfo[1], (PyObject[]) excInfo[2]);
 				}
 
@@ -143,6 +145,8 @@ public partial class Engine: IDisposable {
 			}
 		}
 	}
+
+	public PyObject Eval(PyObject pyObject) => Eval(pyObject.ToString());
 
 	public PyObject Eval(string pythonExpression, bool eager = false) {
 		Default = this;
@@ -171,8 +175,7 @@ public partial class Engine: IDisposable {
 			}
 		} else {
 			var pyObject = PyProxy.Create(this);
-			Exec($"global {pyObject.pyGVarName} \n"
-				+ $"{pyObject.pyGVarName} = {pythonExpression} \n");
+			Exec($"global {pyObject.pyGVarName}; {pyObject.pyGVarName} = {pythonExpression}");
 
 			return pyObject;
 		}
@@ -260,6 +263,21 @@ public partial class Engine: IDisposable {
 		} else {
 			throw new InvalidOperationException($"Cannot convert value of type `{vtype}` to a Python expression.");
 		}
+	}
+
+	public void SetExceptionHandler(string pyFuncName) {
+		Exec($"def ___exc_handler(ex): \n"
+		   + $"    {pyFuncName}(ex)");
+	}
+
+	public void SetPyExceptionHandler(string pyFuncName) {
+		Exec($"def ___py_exc_handler(ex): \n"
+		   + $"    {pyFuncName}(ex)");
+	}
+
+	public void SetNetExceptionHandler(string pyFuncName) {
+		Exec($"def ___net_exc_handler(ex): \n"
+		   + $"    {pyFuncName}(ex)");
 	}
 
 	private void processCall(ref Dictionary<string, object> result) {

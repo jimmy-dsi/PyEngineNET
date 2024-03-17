@@ -16,6 +16,8 @@ public class PyException: Exception {
 		}
 	}
 
+	public int PyTracebackLength => _traceback.Length;
+
 	public PyException(): base() {
 		PyExceptionType = "";
 		PyMessage = "";

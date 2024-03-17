@@ -196,14 +196,14 @@ public abstract partial class PyObject: IDisposable {
 	public static implicit operator PyObject (decimal?                       o) => ConvertFrom(o);
 	public static implicit operator PyObject (string                         o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<byte>                     o) => ConvertFrom(o);
-	public static implicit operator PyObject (List<object?>                  o) => ConvertFrom(o);
+	public static implicit operator PyObject (List<object>                   o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<PyObject>                 o) => ConvertFrom(o);
 	public static implicit operator PyObject (byte[]                         o) => ConvertFrom(o);
-	public static implicit operator PyObject (object?[]                      o) => ConvertFrom(o);
+	public static implicit operator PyObject (object[]                       o) => ConvertFrom(o);
 	public static explicit operator PyObject (PyObject[]                     o) => ConvertFrom(o);
-	public static implicit operator PyObject (HashSet<object?>               o) => ConvertFrom(o);
+	public static implicit operator PyObject (HashSet<object>                o) => ConvertFrom(o);
 	public static implicit operator PyObject (HashSet<PyObject>              o) => ConvertFrom(o);
-	public static implicit operator PyObject (Dictionary<object, object?>    o) => ConvertFrom(o);
+	public static implicit operator PyObject (Dictionary<object, object>     o) => ConvertFrom(o);
 	public static implicit operator PyObject (Dictionary<PyObject, PyObject> o) => ConvertFrom(o);
 	public static implicit operator PyObject (DataClassObject                o) => ConvertFrom(o);
 	// Containers of primitive types
