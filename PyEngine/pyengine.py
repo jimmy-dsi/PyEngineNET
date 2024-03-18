@@ -1,25 +1,30 @@
-import os
-import sys
-import platform
-import msgpack
-import struct
+import os, sys, platform
+import struct, dataclasses
 import socket
-import dataclasses
 import traceback
 import signal
+import msgpack
 if platform.system() == 'Windows':
-	import win32file
-	import pywintypes
+	import win32file, pywintypes
 
 named_pipe = None
 
 # Classes
+class Frame:
+	def __init__(self, tup):
+		self.filename = tup[0]
+		self.lineno   = tup[1]
+		self.name     = tup[2]
+		self.line     = tup[3]
+
+
 class NETException(Exception):
 	"Raised when an Exception occurs on the .NET side"
-	def __init__(self, typename, message):
+	def __init__(self, typename, message, net_traceback):
 		super().__init__(typename + ' - ' + message)
 		self.message = message
 		self.typename = typename
+		self.net_traceback = [Frame(x) for x in net_traceback]
 
 
 class PipeDataException(Exception):
@@ -224,8 +229,8 @@ def ___call_cs_method(func_name, *___args):
 			update_globals()
 			return res
 		elif result['cm'] == 'err':
-			err_info = result['dt']
-			raise NETException(err_info[0], err_info[1])
+			err_info = eval(result['dt'])
+			raise NETException(err_info[0], err_info[1], err_info[2])
 
 
 def update_globals():
@@ -239,6 +244,16 @@ def update_globals():
 	_globals['___pye_var___None'] = ___pye_var___None
 
 
+def exc_traceback(e):
+	tb = []
+	for x in traceback.extract_tb(e.__traceback__):
+		tb.append(x)
+	if isinstance(e, NETException):
+		for x in e.net_traceback:
+			tb.append(x)
+	return tb
+
+
 def exc_dict(e):
 	dt = type(e)
 	return {
@@ -248,7 +263,7 @@ def exc_dict(e):
 			str(e),
 			[
 				(x.filename, x.lineno, x.name, x.line)
-				for x in traceback.extract_tb(e.__traceback__)
+				for x in exc_traceback(e)
 			]
 		]
 	}
@@ -280,9 +295,7 @@ if __name__ == '__main__':
 
 	# Main body
 	pipe_name = sys.argv[1]
-	#print('Pipe name:', pipe_name)
 
-	#global named_pipe
 	if platform.system() == 'Windows':
 		named_pipe = WindowsNamedPipe(pipe_name)
 	else:

@@ -160,8 +160,8 @@ public partial class Engine: IDisposable {
 						break;
 
 					case "err": {
-						var excInfo = (object[]) result["dt"];
-						throw new PyException((string) excInfo[0], (string) excInfo[1]);
+						var excInfo = (PyObject[]) (PyObject) (object[]) result["dt"];
+						throw new PyException((string) excInfo[0], (string) excInfo[1], (PyObject[]) excInfo[2]);
 					}
 
 					case "res": {
@@ -298,7 +298,22 @@ public partial class Engine: IDisposable {
 			var returnVal = method.Invoke(argArray);
 			result = sendAndReceive(new() { ["cm"] = "retn", ["dt"] = returnVal.getExpression() });
 		} catch (Exception ex) {
-			result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = new List<object> { ex.GetType().ToString(), ex.Message } });
+			var stackTrace = new StackTrace(ex, true);
+			var stackFrames = stackTrace.GetFrames();
+			var traceback = new List<object>();
+
+			foreach (var item in stackFrames.Reverse()) {
+				var frameMethod = item.GetMethod();
+				var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
+
+				traceback.Add(new List<object> {
+					item.GetFileName() ?? "",
+					item.GetFileLineNumber(), 
+					fullMethodName,
+					""
+				});
+			}
+			result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = PyExpression(new object[] { ex.GetType().ToString(), ex.Message, traceback }) });
 		}
 	}
 

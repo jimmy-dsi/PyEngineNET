@@ -58,11 +58,17 @@ public class PyException: Exception {
 	}
 
 	public override string ToString() {
-		var sb = new StringBuilder(base.ToString());
-		foreach (var item in _traceback) {
+		var baseStringLines = base.ToString().Split('\n');
+		// Append base exception message
+		var sb = new StringBuilder($"{baseStringLines[0]}");
+		// Append Python traceback in reverse order; In Python it's most recent last, but in C# it's most recent first
+		foreach (var item in _traceback.Reverse()) {
 			sb.Append("\n");
 			sb.Append($"   at {item.FunctionName}() in {item.FileName}:line {item.LineNo}");
 		}
+		// Append the original stacktrace to the end, since in C#, it's most recent first
+		sb.Append("\n");
+		sb.Append($"{string.Join('\n', baseStringLines.Skip(1))}");
 		return sb.ToString();
 	}
 }
