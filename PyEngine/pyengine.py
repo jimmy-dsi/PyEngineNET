@@ -156,7 +156,7 @@ class WindowsNamedPipe(NamedPipe):
 			raise
 
 
-# Default exception handlers. A .NET engine can override these via `engine.Exec("def exc_handler(ex): ...")`
+# Default exception handlers. A .NET engine can override these via `engine.Exec("def ___exc_handler(ex): ...")`
 def ___exc_handler(ex):
 	print(ex, file=sys.stderr)
 
