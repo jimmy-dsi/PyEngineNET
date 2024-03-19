@@ -110,6 +110,8 @@ string? ReadBlock(string? firstLine) {
 		case "while":
 		case "class":
 		case "match":
+		case "try":
+		case "async":
 			break;
 		default:
 			if (keyword.StartsWith('@')) break;
