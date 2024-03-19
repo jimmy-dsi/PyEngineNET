@@ -310,7 +310,8 @@ public partial class Engine: IDisposable {
 					item.GetFileName() ?? "",
 					item.GetFileLineNumber(), 
 					fullMethodName,
-					""
+					"",
+					frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
 				});
 			}
 			result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = PyExpression(new object[] { ex.GetType().ToString(), ex.Message, traceback }) });

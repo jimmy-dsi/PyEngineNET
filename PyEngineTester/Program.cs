@@ -207,12 +207,20 @@ Console.WriteLine(Engine.PyExpression(q));
 string tests = engine.Eval("None");
 Console.WriteLine(Engine.PyExpression(tests));
 
-engine.BindFunction("test_net_errors", (int divisor) => {
-	Test.TestNetErrors(divisor);
-});
+void hello(Dictionary<string, object> test) {
+	hi(test);
+}
+
+void hi(Dictionary<string, object> test) {
+	engine.BindFunction("test_net_errors", (int divisor) => {
+		Test.TestNetErrors(divisor);
+	});
+
+	engine.Exec("test_net_errors(0)");
+}
 
 try {
-	engine.Exec("test_net_errors(0)");
+	hello(new());
 } catch (PyException ex) {
 	Console.WriteLine(ex);
 }

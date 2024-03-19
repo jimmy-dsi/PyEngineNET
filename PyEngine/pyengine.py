@@ -16,6 +16,7 @@ class Frame:
 		self.lineno   = tup[1]
 		self.name     = tup[2]
 		self.line     = tup[3]
+		self.params   = tup[4]
 
 
 class NETException(Exception):
@@ -262,7 +263,7 @@ def exc_dict(e):
 			dt.__name__ if dt.__module__ in {'__main__', 'builtins'} else f'{dt.__module__}.{dt.__name__}',
 			str(e),
 			[
-				(x.filename, x.lineno, x.name, x.line)
+				(x.filename, x.lineno, x.name, x.line, x.params if isinstance(x, Frame) else '')
 				for x in exc_traceback(e)
 			]
 		]
