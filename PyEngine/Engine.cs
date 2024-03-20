@@ -71,6 +71,14 @@ public partial class Engine: IDisposable {
 	internal PyObject Str => str ?? throw new InvalidOperationException("Engine instance has not been started.");
 
 	public void Start() {
+		if (_disposedValue) {
+			throw new ObjectDisposedException(GetType().Name);
+		}
+
+		if (_subProcess != null) {
+			throw new InvalidOperationException("Cannot perform Start() on already active engine.");
+		}
+
 		Default = this;
 
 		if (_usesScript) {
@@ -123,6 +131,10 @@ public partial class Engine: IDisposable {
 	public void Exec(PyObject pyObject) => Exec(pyObject.ToString());
 
 	public void Exec(string pythonCode) {
+		if (_disposedValue) {
+			throw new ObjectDisposedException(GetType().Name);
+		}
+
 		Default = this;
 		
 		Dictionary<string, object> result = sendAndReceive(new() { ["cm"] = "exec", ["dt"] = pythonCode });
@@ -149,6 +161,10 @@ public partial class Engine: IDisposable {
 	public PyObject Eval(PyObject pyObject) => Eval(pyObject.ToString());
 
 	public PyObject Eval(string pythonExpression, bool eager = false) {
+		if (_disposedValue) {
+			throw new ObjectDisposedException(GetType().Name);
+		}
+
 		Default = this;
 
 		if (eager) {
@@ -266,16 +282,28 @@ public partial class Engine: IDisposable {
 	}
 
 	public void SetExceptionHandler(string pyFuncName) {
+		if (_disposedValue) {
+			throw new ObjectDisposedException(GetType().Name);
+		}
+
 		Exec($"def ___exc_handler(ex): \n"
 		   + $"    {pyFuncName}(ex)");
 	}
 
 	public void SetPyExceptionHandler(string pyFuncName) {
+		if (_disposedValue) {
+			throw new ObjectDisposedException(GetType().Name);
+		}
+
 		Exec($"def ___py_exc_handler(ex): \n"
 		   + $"    {pyFuncName}(ex)");
 	}
 
 	public void SetNetExceptionHandler(string pyFuncName) {
+		if (_disposedValue) {
+			throw new ObjectDisposedException(GetType().Name);
+		}
+
 		Exec($"def ___net_exc_handler(ex): \n"
 		   + $"    {pyFuncName}(ex)");
 	}
@@ -358,12 +386,17 @@ public partial class Engine: IDisposable {
 	}
 
 	private Dictionary<string, object> receive() {
-		var length = _pipeStreamReader.ReadInt32();
-		if (length < 0) {
-			throw new PipeDataException("Invalid data size from pipe");
+		try {
+			var length = _pipeStreamReader.ReadInt32();
+			if (length < 0) {
+				throw new PipeDataException("Invalid data size from pipe");
+			}
+			var data = _pipeStreamReader.ReadBytes(length);
+			return MessagePackSerializer.Deserialize<Dictionary<string, object>>(data);
+		} catch (EndOfStreamException) {
+			Dispose();
+			throw new PythonExitedException("The Python process has been exited.");
 		}
-		var data = _pipeStreamReader.ReadBytes(length);
-		return MessagePackSerializer.Deserialize<Dictionary<string, object>>(data);
 	}
 
 	private Dictionary<string, object> sendAndReceive(Dictionary<string, object> data) {

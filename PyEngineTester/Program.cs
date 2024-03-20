@@ -242,3 +242,9 @@ try {
 } catch (PyException ex) {
 	Console.WriteLine(ex);
 }
+
+try {
+	engine.Exec("exit()");
+} catch (PythonExitedException) {
+	engine.Exec("print('hello')");
+}
