@@ -89,13 +89,9 @@ try {
 			execInProgress = false;
 		}
 	}
-} catch (EndOfStreamException) {
+} catch (PythonExitedException) {
 	// Catch the exception raised when the Python process unexpectedly quits.
-} finally {
-	engine.Dispose();
 }
-
-
 
 string? ReadBlock(string? firstLine) {
 	if (firstLine == null) return null;
