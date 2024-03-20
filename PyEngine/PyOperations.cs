@@ -685,3 +685,24 @@ internal class PyKeyLookup: PyOperation {
 		return $"{_value.getExpression()}[{_key.getExpression()}]";
 	}
 }
+
+
+[DebuggerDisplay("PyDunderInvoke")]
+internal class PyDunderInvoke: PyOperation {
+	private PyObject _value;
+	private string   _funcName;
+
+	internal PyDunderInvoke(Engine? engine, PyObject value, string funcName): base(engine) {
+		_value    = value;
+		_funcName = funcName;
+	}
+
+	public override void Dispose() {
+		_value.Dispose();
+	}
+
+	internal override string getExpression() {
+		return $"{_funcName}({_value.getExpression()})";
+	}
+}
+

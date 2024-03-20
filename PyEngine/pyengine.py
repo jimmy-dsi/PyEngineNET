@@ -173,6 +173,12 @@ def ___net_exc_handler(ex):
 	___exc_handler(ex)
 
 
+# Used to convert iterables to generators for use on .NET side
+def ___make_gen(it):
+	for item in it:
+		yield item
+
+
 # Serializer
 primitives = (bool, int, float, str, bytes, bytearray, tuple, type(None))
 def ser(value):
@@ -241,6 +247,7 @@ def update_globals():
 	# Reset visible globals to .NET process
 	_globals['___call_cs_method'] = ___call_cs_method
 	_globals['___pye_var___None'] = ___pye_var___None
+	_globals['___make_gen']       = ___make_gen
 
 
 def exc_traceback(e):
@@ -309,6 +316,7 @@ if __name__ == '__main__':
 		'___exc_handler':     ___exc_handler,
 		'___py_exc_handler':  ___py_exc_handler,
 		'___net_exc_handler': ___net_exc_handler,
+		'___make_gen':        ___make_gen
 	}
 
 	result = send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})

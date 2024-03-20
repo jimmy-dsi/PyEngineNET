@@ -243,8 +243,33 @@ try {
 	Console.WriteLine(ex);
 }
 
-try {
-	engine.Exec("exit()");
-} catch (PythonExitedException) {
-	engine.Exec("print('hello')");
+PyObject pyObject = "17.3";
+pyObject = pyObject.Float().Round().Int().Str().List().Set();
+Console.WriteLine(pyObject.ToString());
+HashSet<string> resultSet = engine.Eval(pyObject);
+
+//try {
+//	engine.Exec("exit()");
+//} catch (PythonExitedException) {
+//	//engine.Exec("print('hello')");
+//}
+
+engine.Exec("""
+def my_gen():
+	yield 1
+	yield 2
+	yield 3
+""");
+
+PyObject myGen = engine.Eval("my_gen()");
+foreach (var item in myGen) {
+	int value = item;
+	Console.WriteLine(value);
 }
+
+PyObject myList = engine.Eval("['hello', True, 7, 8, -9]");
+foreach (var item in myList) {
+	var value = item.Result;
+	Console.WriteLine(value.ToString());
+}
+Console.WriteLine("Done.");

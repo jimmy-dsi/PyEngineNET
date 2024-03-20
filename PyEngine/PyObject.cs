@@ -1,10 +1,11 @@
 ﻿namespace PyEngine;
 
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
 [DebuggerDisplay("PyObject")]
-public abstract partial class PyObject: IDisposable {
+public abstract partial class PyObject: IDisposable, IEnumerable<PyObject> {
 	public class Accessor {
 		private readonly PyObject _pyObject;
 
@@ -184,6 +185,94 @@ public abstract partial class PyObject: IDisposable {
 		checkEngines(engine, rhs.engine);
 		return new PyGreaterThanOrEqual(engine, this, rhs);
 	}
+
+	// "Dunder" method invokations
+	public PyObject Len() {
+		return new PyDunderInvoke(engine, this, "len");
+	}
+
+	public PyObject Repr() {
+		return new PyDunderInvoke(engine, this, "repr");
+	}
+
+	public PyObject Str() {
+		return new PyDunderInvoke(engine, this, "str");
+	}
+
+	public PyObject Bool() {
+		return new PyDunderInvoke(engine, this, "bool");
+	}
+
+	public PyObject Int() {
+		return new PyDunderInvoke(engine, this, "int");
+	}
+
+	public PyObject Float() {
+		return new PyDunderInvoke(engine, this, "float");
+	}
+
+	public PyObject List() {
+		return new PyDunderInvoke(engine, this, "list");
+	}
+
+	public PyObject Set() {
+		return new PyDunderInvoke(engine, this, "set");
+	}
+
+	public PyObject Tuple() {
+		return new PyDunderInvoke(engine, this, "tuple");
+	}
+
+	public PyObject Round() {
+		return new PyDunderInvoke(engine, this, "round");
+	}
+
+	public PyObject Abs() {
+		return new PyDunderInvoke(engine, this, "abs");
+	}
+
+	public PyObject Next() {
+		return new PyDunderInvoke(engine, this, "next");
+	}
+
+	public PyObject Hash() {
+		return new PyDunderInvoke(engine, this, "hash");
+	}
+
+	public PyObject Type() {
+		return new PyDunderInvoke(engine, this, "type");
+	}
+
+	internal PyObject MakeGen() {
+		return new PyDunderInvoke(engine, this, "___make_gen");
+	}
+
+	public IEnumerator<PyObject> GetEnumerator() {
+		var gen = MakeGen().LazyResult;
+
+		while (true) {
+			var shouldBreak = false;
+			PyObject? value = null;
+
+			try {
+				value = gen.Next().LazyResult;
+			} catch (PyException ex) {
+				if (ex.PyExceptionType == "StopIteration") {
+					shouldBreak = true;
+				} else {
+					throw;
+				}
+			}
+
+			if (shouldBreak) {
+				break;
+			} else {
+				yield return value;
+			}
+		}
+	}
+
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 	// Operations - Overloaded
 	public static PyObject operator + (PyObject lhs, PyObject rhs) {
