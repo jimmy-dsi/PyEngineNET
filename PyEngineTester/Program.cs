@@ -224,3 +224,21 @@ try {
 } catch (PyException ex) {
 	Console.WriteLine(ex);
 }
+
+try {
+	engine.Exec("from pathlib import Path");
+	var res = engine.Eval("Path('some/path')", eager: true);
+} catch (PyException ex) {
+	Console.WriteLine(ex);
+}
+
+engine.BindFunction("test_exc", (int divisor) => {
+	PyObject foo = "string";
+	return foo - divisor;
+});
+
+try {
+	var res = engine.Eval("test_exc(0)", eager: true);
+} catch (PyException ex) {
+	Console.WriteLine(ex);
+}

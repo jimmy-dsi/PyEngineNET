@@ -218,14 +218,12 @@ def ___call_cs_method(func_name, *___args):
 		elif result['cm'] == 'eval':
 			try:
 				value = eval(result['dt'], _globals, _locals)
+				update_globals()
+				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
 			except Exception as e:
 				update_globals()
 				result = catch_exec_eval(e)
-			else:
-				update_globals()
-				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
 		elif result['cm'] == 'retn':
-			# TODO: Account for exceptions in return evaluation
 			res = eval(result['dt'], _globals, _locals)
 			update_globals()
 			return res
@@ -327,9 +325,8 @@ if __name__ == '__main__':
 		elif result['cm'] == 'eval':
 			try:
 				value = eval(result['dt'], _globals)
+				update_globals()
+				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
 			except Exception as e:
 				update_globals()
 				result = catch_exec_eval(e)
-			else:
-				update_globals()
-				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
