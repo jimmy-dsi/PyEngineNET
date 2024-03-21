@@ -118,4 +118,10 @@ public partial class Engine: IDisposable {
 	public void BindFunction<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
 		string pyFuncName, Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> csMethod) =>
 			BindMethod(pyFuncName, (ActionBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>) csMethod);
+
+	public void BindGenerator(string pyFuncName, Func<IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding) csMethod);
+
+	public void BindGenerator<T>(string pyFuncName, Func<T, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T>) csMethod);
 }

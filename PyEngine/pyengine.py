@@ -162,6 +162,62 @@ class WindowsNamedPipe(NamedPipe):
 			raise
 
 
+___next_id = 0
+
+# For some reason, any calls or accesses to a global variable with leading underscores from within the ___NETGenerator class REFUSES to work properly,
+# even when `global <___var_name>` is explicitly added in the method body. So, we're going to do things in this stupid way.
+def ng___init(self, func_name, *args):
+	global ___next_id
+	self.id = ___next_id
+	___next_id += 1
+	___call_cs_method(func_name, self.id, *args)
+
+
+def ng___next(self):
+	result = send_and_recv({'cm': 'step', 'id': self.id})
+
+	global _globals
+
+	while True:
+		if result['cm'] == 'exec':
+			try:
+				exec(result['dt'], _globals)
+			except Exception as e:
+				update_globals()
+				result = catch_exec_eval(e)
+			else:
+				update_globals()
+				result = send_and_recv({'cm': 'done'})
+		elif result['cm'] == 'eval':
+			try:
+				value = eval(result['dt'], _globals)
+				update_globals()
+				result = send_and_recv({'cm': 'res', 'dt': ser(value)})
+			except Exception as e:
+				update_globals()
+				result = catch_exec_eval(e)
+		elif result['cm'] == 'yld':
+			res = eval(result['dt'], _globals)
+			update_globals()
+			return res
+		elif result['cm'] == 'stop':
+			raise StopIteration()
+		elif result['cm'] == 'err':
+			err_info = eval(result['dt'])
+			raise NETException(err_info[0], err_info[1], err_info[2])
+	
+
+class ___NETGenerator:
+	def __init__(self, func_name, *args):
+		ng___init(self, func_name, *args)
+
+	def __iter__(self):
+		return self
+
+	def __next__(self):
+		return ng___next(self)
+
+
 # Default exception handlers. A .NET engine can override these via `engine.Exec("def ___exc_handler(ex): ...")`
 def ___exc_handler(ex):
 	print(ex, file=sys.stderr)
@@ -205,8 +261,8 @@ def ser(value):
 		return value # TODO: Raise error about un-serializable class
 
 
-def ___call_cs_method(func_name, *___args):
-	result = send_and_recv({'cm': 'call', 'func': func_name})
+def ___call_cs_method(func_name, gen_id, *___args):
+	result = send_and_recv({'cm': 'call', 'func': func_name, 'id': gen_id})
 
 	global _globals
 	_locals = {'___args': ___args}
@@ -244,10 +300,14 @@ def update_globals():
 	___exc_handler     = _globals['___exc_handler']
 	___py_exc_handler  = _globals['___py_exc_handler']
 	___net_exc_handler = _globals['___net_exc_handler']
+	___next_id         = _globals['___next_id']
 	# Reset visible globals to .NET process
 	_globals['___call_cs_method'] = ___call_cs_method
 	_globals['___pye_var___None'] = ___pye_var___None
 	_globals['___make_gen']       = ___make_gen
+	_globals['___NETGenerator']   = ___NETGenerator
+	_globals['ng___init']         = ng___init
+	_globals['ng___next']         = ng___next
 
 
 def exc_traceback(e):
@@ -316,7 +376,11 @@ if __name__ == '__main__':
 		'___exc_handler':     ___exc_handler,
 		'___py_exc_handler':  ___py_exc_handler,
 		'___net_exc_handler': ___net_exc_handler,
-		'___make_gen':        ___make_gen
+		'___make_gen':        ___make_gen,
+		'___NETGenerator':    ___NETGenerator,
+		'___next_id':         ___next_id,
+		'ng___init':          ng___init,
+		'ng___next':          ng___next
 	}
 
 	result = send_and_recv({'cm': 'ready', 'dt': int(os.getpid())})

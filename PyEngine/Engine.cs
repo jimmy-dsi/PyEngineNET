@@ -25,7 +25,10 @@ public partial class Engine: IDisposable {
 	private BinaryWriter _pipeStreamWriter;
 	private BinaryReader _pipeStreamReader;
 
-	private readonly Dictionary<string, MethodBinding> _boundFuncs = new();
+	private readonly Dictionary<string, MethodBinding>    _boundFuncs = new();
+	private readonly Dictionary<string, GeneratorBinding> _boundGens  = new();
+
+	private readonly Dictionary<int, IEnumerator<PyObject>> _mappedGenerators = new();
 
 	private Process? _subProcess = null;
 
@@ -144,6 +147,10 @@ public partial class Engine: IDisposable {
 					processCall(ref result);
 					break;
 
+				case "step":
+					processStep(ref result);
+					break;
+
 				case "err": {
 					var excInfo = (PyObject[]) (PyObject) (object[]) result["dt"];
 					throw new PyException((string) excInfo[0], (string) excInfo[1], (PyObject[]) excInfo[2]);
@@ -173,6 +180,10 @@ public partial class Engine: IDisposable {
 				switch ((string) result["cm"]) {
 					case "call":
 						processCall(ref result);
+						break;
+
+					case "step":
+						processStep(ref result);
 						break;
 
 					case "err": {
@@ -321,29 +332,64 @@ public partial class Engine: IDisposable {
 		}
 		var argArray = argList.ToArray();
 
-		var method = _boundFuncs[methodName];
 		try {
-			var returnVal = method.Invoke(argArray);
-			result = sendAndReceive(new() { ["cm"] = "retn", ["dt"] = returnVal.getExpression() });
-		} catch (Exception ex) {
-			var stackTrace = new StackTrace(ex, true);
-			var stackFrames = stackTrace.GetFrames();
-			var traceback = new List<object>();
-
-			foreach (var item in stackFrames.Reverse()) {
-				var frameMethod = item.GetMethod();
-				var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
-
-				traceback.Add(new List<object> {
-					item.GetFileName() ?? "",
-					item.GetFileLineNumber(), 
-					fullMethodName,
-					"",
-					frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
-				});
+			PyObject? returnVal = null;
+			if (_boundGens.ContainsKey(methodName)) {
+				var method = _boundGens[methodName];
+				var id = result["id"].AsIntType<int>();
+				_mappedGenerators[id] = method.Invoke(argArray).GetEnumerator();
+				returnVal = PyObject.None; // pyengine doesn't need a result in this case; can discard.
+			} else {
+				var method = _boundFuncs[methodName];
+				returnVal = method.Invoke(argArray);
 			}
-			result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = PyExpression(new object[] { ex.GetType().ToString(), ex.Message, traceback }) });
+			result = sendAndReceive(new() { ["cm"] = "retn", ["dt"] = returnVal?.getExpression() ?? "None" });
+		} catch (Exception ex) {
+			processException(ex, ref result);
 		}
+	}
+
+	private void processStep(ref Dictionary<string, object> result) {
+		var id = result["id"].AsIntType<int>();
+		if (!_mappedGenerators.ContainsKey(id)) {
+			result = sendAndReceive(new() { ["cm"] = "stop" });
+			return;
+		}
+
+		try {
+			var gen = _mappedGenerators[id];
+
+			var isActive = gen.MoveNext();
+			if (isActive) {
+				var yieldValue = gen.Current;
+				result = sendAndReceive(new() { ["cm"] = "yld", ["dt"] = yieldValue?.getExpression() ?? "None" });
+			} else {
+				_mappedGenerators.Remove(id);
+				result = sendAndReceive(new() { ["cm"] = "stop" });
+			}
+		} catch (Exception ex) {
+			processException(ex, ref result);
+		}
+	}
+
+	private void processException(Exception ex, ref Dictionary<string, object> result) {
+		var stackTrace = new StackTrace(ex, true);
+		var stackFrames = stackTrace.GetFrames();
+		var traceback = new List<object>();
+
+		foreach (var item in stackFrames.Reverse()) {
+			var frameMethod = item.GetMethod();
+			var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
+
+			traceback.Add(new List<object> {
+				item.GetFileName() ?? "",
+				item.GetFileLineNumber(), 
+				fullMethodName,
+				"",
+				frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
+			});
+		}
+		result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = PyExpression(new object[] { ex.GetType().ToString(), ex.Message, traceback }) });
 	}
 
 	internal void BindMethod(string pyFuncName, MethodBinding csMethod) {
@@ -356,7 +402,21 @@ public partial class Engine: IDisposable {
 		_boundFuncs[pyFuncName] = csMethod;
 		Exec($"global {pyFuncName} \n"
 		   + $"def {pyFuncName}(*args): \n"
-		   + $"    return ___call_cs_method('{pyFuncName}', *args) \n");
+		   + $"    return ___call_cs_method('{pyFuncName}', None, *args) \n");
+	}
+
+	internal void BindGeneratorMethod(string pyFuncName, GeneratorBinding csMethod) {
+		Default = this;
+
+		if (!Util.IdentRegex.IsMatch(pyFuncName)) {
+			throw new FormatException("Python function name must be a valid identifier.");
+		}
+
+		_boundGens[pyFuncName] = csMethod;
+		Exec($"global {pyFuncName} \n"
+		   + $"class {pyFuncName}(___NETGenerator): \n"
+		   + $"    def __init__(self, *args): \n"
+		   + $"        super().__init__('{pyFuncName}', *args) \n");
 	}
 
 	public void Dispose() {

@@ -273,3 +273,40 @@ foreach (var item in myList) {
 	Console.WriteLine(value.ToString());
 }
 Console.WriteLine("Done.");
+
+engine.BindGenerator("get_ints", (int n) => GetInts(n));
+
+IEnumerable<PyObject> GetInts(int n) {
+	Console.WriteLine("Get first int.");
+	yield return n + 1;
+	Console.WriteLine("Get second int.");
+	yield return n + 2;
+	Console.WriteLine("Get third int.");
+	yield return n + 3;
+	Console.WriteLine("Done.");
+}
+
+var myNetGen  = engine.Eval("get_ints(7)");
+var myNetGen2 = engine.Eval("get_ints(7)");
+try {
+	var firstInt   = myNetGen.Next().Result;
+	var secondInt  = myNetGen.Next().Result;
+	var firstInt2  = myNetGen2.Next().Result;
+	var secondInt2 = myNetGen2.Next().Result;
+	var thirdInt   = myNetGen.Next().Result;
+	var thirdInt2  = myNetGen2.Next().Result;
+	var fourthInt  = myNetGen.Next().Result;
+	var fourthInt2 = myNetGen2.Next().Result;
+} catch (PyException ex) { 
+	if (ex.PyExceptionType == "StopIteration") {
+		Console.WriteLine("Done.");
+	} else {
+		throw;
+	}
+}
+
+var myNetGen3 = engine.Eval("get_ints(7)");
+foreach (int item in myNetGen3) {
+	Console.WriteLine(item);
+}
+Console.WriteLine("Done.");
