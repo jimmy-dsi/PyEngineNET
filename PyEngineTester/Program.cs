@@ -310,3 +310,21 @@ foreach (int item in myNetGen3) {
 	Console.WriteLine(item);
 }
 Console.WriteLine("Done.");
+
+engine.BindGenerator("get_data", (int n, bool b, string s, object[] a, double d) => GetData(n, b, s, a, d));
+
+IEnumerable<PyObject> GetData(int n, bool b, string s, object[] a, double d) {
+	yield return n;
+	yield return b;
+	yield return s;
+	yield return a;
+	yield return d;
+}
+
+engine.Exec("data = get_data(7, True, 'hi', ['q', 'wert', 'y'], 3.14)");
+engine.Exec("print(next(data))");
+engine.Exec("print(next(data))");
+engine.Exec("print(next(data))");
+engine.Exec("print(next(data))");
+engine.Exec("print(next(data))");
+engine.Exec("print(next(data))");

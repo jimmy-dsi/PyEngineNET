@@ -124,4 +124,57 @@ public partial class Engine: IDisposable {
 
 	public void BindGenerator<T>(string pyFuncName, Func<T, IEnumerable<PyObject>> csMethod) =>
 		BindGeneratorMethod(pyFuncName, (GenBinding<T>) csMethod);
+
+	public void BindGenerator<T1, T2>(string pyFuncName, Func<T1, T2, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2>) csMethod);
+
+	public void BindGenerator<T1, T2, T3>(string pyFuncName, Func<T1, T2, T3, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4>(string pyFuncName, Func<T1, T2, T3, T4, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5>(string pyFuncName, Func<T1, T2, T3, T4, T5, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6>(string pyFuncName, Func<T1, T2, T3, T4, T5, T6, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7>(string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8>(string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, IEnumerable<PyObject>> csMethod) =>
+		BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>) csMethod);
+
+	public void BindGenerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(
+		string pyFuncName, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, IEnumerable<PyObject>> csMethod) =>
+			BindGeneratorMethod(pyFuncName, (GenBinding<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>) csMethod);
 }
