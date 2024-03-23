@@ -153,7 +153,7 @@ public partial class Engine: IDisposable {
 
 				case "err": {
 					var excInfo = (PyObject[]) (PyObject) (object[]) result["dt"];
-					throw new PyException((string) excInfo[0], (string) excInfo[1], (PyObject[]) excInfo[2]);
+					throw capturePyException(excInfo);
 				}
 
 				case "done":
@@ -188,7 +188,7 @@ public partial class Engine: IDisposable {
 
 					case "err": {
 						var excInfo = (PyObject[]) (PyObject) (object[]) result["dt"];
-						throw new PyException((string) excInfo[0], (string) excInfo[1], (PyObject[]) excInfo[2]);
+						throw capturePyException(excInfo);
 					}
 
 					case "res": {
@@ -369,6 +369,82 @@ public partial class Engine: IDisposable {
 			}
 		} catch (Exception ex) {
 			processException(ex, ref result);
+		}
+	}
+
+	private PyException capturePyException(PyObject[] excInfo) {
+		var approxExcType   = (string)     excInfo[0];
+		var reportedExcType = (string)     excInfo[1];
+		var excMessage      = (string)     excInfo[2];
+		var traceback       = (PyObject[]) excInfo[3];
+
+		switch (approxExcType) {
+			case "IOError":
+				return new PyIOError(reportedExcType, excMessage, traceback);
+			case "OSError":
+				return new PyOSError(reportedExcType, excMessage, traceback);
+			case "FileNotFoundError":
+				return new PyFileNotFoundError(reportedExcType, excMessage, traceback);
+			case "FileExistsError":
+				return new PyFileExistsError(reportedExcType, excMessage, traceback);
+			case "PermissionError":
+				return new PyPermissionError(reportedExcType, excMessage, traceback);
+			case "ConnectionError":
+				return new PyConnectionError(reportedExcType, excMessage, traceback);
+			case "TimeoutError":
+				return new PyTimeoutError(reportedExcType, excMessage, traceback);
+			case "IsADirectoryError":
+				return new PyIsADirectoryError(reportedExcType, excMessage, traceback);
+			case "ValueError":
+				return new PyValueError(reportedExcType, excMessage, traceback);
+			case "TypeError":
+				return new PyTypeError(reportedExcType, excMessage, traceback);
+			case "AttributeError":
+				return new PyAttributeError(reportedExcType, excMessage, traceback);
+			case "ImportError":
+				return new PyImportError(reportedExcType, excMessage, traceback);
+			case "ModuleNotFoundError":
+				return new PyModuleNotFoundError(reportedExcType, excMessage, traceback);
+			case "NameError":
+				return new PyNameError(reportedExcType, excMessage, traceback);
+			case "LookupError":
+				return new PyLookupError(reportedExcType, excMessage, traceback);
+			case "IndexError":
+				return new PyIndexError(reportedExcType, excMessage, traceback);
+			case "KeyError":
+				return new PyKeyError(reportedExcType, excMessage, traceback);
+			case "StopIteration":
+				return new PyStopIteration(reportedExcType, excMessage, traceback);
+			case "StopAsyncIteration":
+				return new PyStopAsyncIteration(reportedExcType, excMessage, traceback);
+			case "ArithmeticError":
+				return new PyArithmeticError(reportedExcType, excMessage, traceback);
+			case "ZeroDivisionError":
+				return new PyZeroDivisionError(reportedExcType, excMessage, traceback);
+			case "OverflowError":
+				return new PyOverflowError(reportedExcType, excMessage, traceback);
+			case "FloatingPointError":
+				return new PyFloatingPointError(reportedExcType, excMessage, traceback);
+			case "AssertionError":
+				return new PyAssertionError(reportedExcType, excMessage, traceback);
+			case "RuntimeError":
+				return new PyRuntimeError(reportedExcType, excMessage, traceback);
+			case "NotImplementedError":
+				return new PyNotImplementedError(reportedExcType, excMessage, traceback);
+			case "MemoryError":
+				return new PyMemoryError(reportedExcType, excMessage, traceback);
+			case "BufferError":
+				return new PyBufferError(reportedExcType, excMessage, traceback);
+			case "ReferenceError":
+				return new PyReferenceError(reportedExcType, excMessage, traceback);
+			case "SystemError":
+				return new PySystemError(reportedExcType, excMessage, traceback);
+			case "SyntaxError":
+				return new PySyntaxError(reportedExcType, excMessage, traceback);
+			case "EOFError":
+				return new PyEOFError(reportedExcType, excMessage, traceback);
+			default:
+				return new PyException(reportedExcType, excMessage, traceback);
 		}
 	}
 

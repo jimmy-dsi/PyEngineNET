@@ -239,7 +239,7 @@ engine.BindFunction("test_exc", (int divisor) => {
 
 try {
 	var res = engine.Eval("test_exc(0)", eager: true);
-} catch (PyException ex) {
+} catch (PyTypeError ex) {
 	Console.WriteLine(ex);
 }
 
@@ -297,12 +297,8 @@ try {
 	var thirdInt2  = myNetGen2.Next().Result;
 	var fourthInt  = myNetGen.Next().Result;
 	var fourthInt2 = myNetGen2.Next().Result;
-} catch (PyException ex) { 
-	if (ex.PyExceptionType == "StopIteration") {
-		Console.WriteLine("Done.");
-	} else {
-		throw;
-	}
+} catch (PyStopIteration) { 
+	Console.WriteLine("Done.");
 }
 
 var myNetGen3 = engine.Eval("get_ints(7)");

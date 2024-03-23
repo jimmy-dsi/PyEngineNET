@@ -322,10 +322,78 @@ def exc_traceback(e):
 
 def exc_dict(e):
 	dt = type(e)
+	true_dtname = dt.__name__ if dt.__module__ in {'__main__', 'builtins'} else f'{dt.__module__}.{dt.__name__}'
+
+	if isinstance(e, IOError):
+		dtname = 'IOError'
+	elif isinstance(e, FileNotFoundError):
+		dtname = 'FileNotFoundError'
+	elif isinstance(e, FileExistsError):
+		dtname = 'FileExistsError'
+	elif isinstance(e, PermissionError):
+		dtname = 'PermissionError'
+	elif isinstance(e, ConnectionError):
+		dtname = 'ConnectionError'
+	elif isinstance(e, TimeoutError):
+		dtname = 'TimeoutError'
+	elif isinstance(e, IsADirectoryError):
+		dtname = 'IsADirectoryError'
+	elif isinstance(e, OSError):
+		dtname = 'OSError'
+	elif isinstance(e, ValueError):
+		dtname = 'ValueError'
+	elif isinstance(e, TypeError):
+		dtname = 'TypeError'
+	elif isinstance(e, AttributeError):
+		dtname = 'AttributeError'
+	elif isinstance(e, NameError):
+		dtname = 'NameError'
+	elif isinstance(e, ModuleNotFoundError):
+		dtname = 'ModuleNotFoundError'
+	elif isinstance(e, ImportError):
+		dtname = 'ImportError'
+	elif isinstance(e, IndexError):
+		dtname = 'IndexError'
+	elif isinstance(e, KeyError):
+		dtname = 'KeyError'
+	elif isinstance(e, LookupError):
+		dtname = 'LookupError'
+	elif isinstance(e, StopIteration):
+		dtname = 'StopIteration'
+	elif isinstance(e, StopAsyncIteration):
+		dtname = 'StopAsyncIteration'
+	elif isinstance(e, ZeroDivisionError):
+		dtname = 'ZeroDivisionError'
+	elif isinstance(e, OverflowError):
+		dtname = 'OverflowError'
+	elif isinstance(e, FloatingPointError):
+		dtname = 'FloatingPointError'
+	elif isinstance(e, AssertionError):
+		dtname = 'AssertionError'
+	elif isinstance(e, RuntimeError):
+		dtname = 'RuntimeError'
+	elif isinstance(e, NotImplementedError):
+		dtname = 'NotImplementedError'
+	elif isinstance(e, MemoryError):
+		dtname = 'MemoryError'
+	elif isinstance(e, BufferError):
+		dtname = 'BufferError'
+	elif isinstance(e, ReferenceError):
+		dtname = 'ReferenceError'
+	elif isinstance(e, SystemError):
+		dtname = 'SystemError'
+	elif isinstance(e, SyntaxError):
+		dtname = 'SyntaxError'
+	elif isinstance(e, EOFError):
+		dtname = 'EOFError'
+	else:
+		dtname = 'Exception'
+
 	return {
 		'cm': 'err',
 		'dt': [
-			dt.__name__ if dt.__module__ in {'__main__', 'builtins'} else f'{dt.__module__}.{dt.__name__}',
+			dtname,
+			true_dtname,
 			str(e),
 			[
 				(x.filename, x.lineno, x.name, x.line, x.params if isinstance(x, Frame) else '')
