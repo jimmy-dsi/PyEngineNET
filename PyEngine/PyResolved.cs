@@ -131,6 +131,46 @@ internal class PyResolved: PyObject {
 			}
 
 			return result.AsListType<T, byte>();
+		} else if (typeof(T).IsConvArrayType() && _value!.GetType().IsListType<object>()) { 
+			if      (typeof(T) == typeof(sbyte[]))    return (T) (object) convertToArray<sbyte>();
+			else if (typeof(T) == typeof(ushort[]))   return (T) (object) convertToArray<ushort>();
+			else if (typeof(T) == typeof(short[]))    return (T) (object) convertToArray<short>();
+			else if (typeof(T) == typeof(uint[]))     return (T) (object) convertToArray<uint>();
+			else if (typeof(T) == typeof(int[]))      return (T) (object) convertToArray<int>();
+			else if (typeof(T) == typeof(ulong[]))    return (T) (object) convertToArray<ulong>();
+			else if (typeof(T) == typeof(long[]))     return (T) (object) convertToArray<long>();
+			else if (typeof(T) == typeof(float[]))    return (T) (object) convertToArray<float>();
+			else if (typeof(T) == typeof(double[]))   return (T) (object) convertToArray<double>();
+			else if (typeof(T) == typeof(decimal[]))  return (T) (object) convertToArray<decimal>();
+			else if (typeof(T) == typeof(string[]))   return (T) (object) convertToArray<string>();
+			else /*if (typeof(T) == typeof(bool[]))*/ return (T) (object) convertToArray<bool>();
+		} else if (typeof(T).IsConvListType() && _value!.GetType().IsListType<object>()) { 
+			if      (typeof(T) == typeof(List<sbyte>))    return (T) (object) convertToList<sbyte>();
+			else if (typeof(T) == typeof(List<ushort>))   return (T) (object) convertToList<ushort>();
+			else if (typeof(T) == typeof(List<short>))    return (T) (object) convertToList<short>();
+			else if (typeof(T) == typeof(List<uint>))     return (T) (object) convertToList<uint>();
+			else if (typeof(T) == typeof(List<int>))      return (T) (object) convertToList<int>();
+			else if (typeof(T) == typeof(List<ulong>))    return (T) (object) convertToList<ulong>();
+			else if (typeof(T) == typeof(List<long>))     return (T) (object) convertToList<long>();
+			else if (typeof(T) == typeof(List<float>))    return (T) (object) convertToList<float>();
+			else if (typeof(T) == typeof(List<double>))   return (T) (object) convertToList<double>();
+			else if (typeof(T) == typeof(List<decimal>))  return (T) (object) convertToList<decimal>();
+			else if (typeof(T) == typeof(List<string>))   return (T) (object) convertToList<string>();
+			else /*if (typeof(T) == typeof(List<bool>))*/ return (T) (object) convertToList<bool>();
+		} else if (typeof(T).IsConvSetType() && _value is HashSet<object>) { 
+			if      (typeof(T) == typeof(HashSet<byte>))     return (T) (object) convertToSet<byte>();
+			else if (typeof(T) == typeof(HashSet<sbyte>))    return (T) (object) convertToSet<sbyte>();
+			else if (typeof(T) == typeof(HashSet<ushort>))   return (T) (object) convertToSet<ushort>();
+			else if (typeof(T) == typeof(HashSet<short>))    return (T) (object) convertToSet<short>();
+			else if (typeof(T) == typeof(HashSet<uint>))     return (T) (object) convertToSet<uint>();
+			else if (typeof(T) == typeof(HashSet<int>))      return (T) (object) convertToSet<int>();
+			else if (typeof(T) == typeof(HashSet<ulong>))    return (T) (object) convertToSet<ulong>();
+			else if (typeof(T) == typeof(HashSet<long>))     return (T) (object) convertToSet<long>();
+			else if (typeof(T) == typeof(HashSet<float>))    return (T) (object) convertToSet<float>();
+			else if (typeof(T) == typeof(HashSet<double>))   return (T) (object) convertToSet<double>();
+			else if (typeof(T) == typeof(HashSet<decimal>))  return (T) (object) convertToSet<decimal>();
+			else if (typeof(T) == typeof(HashSet<string>))   return (T) (object) convertToSet<string>();
+			else /*if (typeof(T) == typeof(HashSet<bool>))*/ return (T) (object) convertToSet<bool>();
 		} else if (typeof(T) == _value!.GetType()) {
 			// Handles: bool, string, HashSet<object>, Dictionary<object, object>, DataClassObject
 			return (T) _value;

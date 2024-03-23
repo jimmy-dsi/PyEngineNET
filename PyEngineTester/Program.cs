@@ -311,14 +311,14 @@ foreach (int item in myNetGen3) {
 }
 Console.WriteLine("Done.");
 
-engine.BindGenerator("get_data", (int n, bool b, string s, object[] a, double d) => GetData(n, b, s, a, d));
+engine.BindGenerator("get_data", (int n, bool b, string s, string[] a, double d) => GetData(n, b, s, a, d));
 
-IEnumerable<PyObject> GetData(int n, bool b, string s, object[] a, double d) {
+IEnumerable<PyObject> GetData(int n, bool b, string s, string[] a, double d) {
 	yield return n;
 	yield return b;
-	yield return s;
-	yield return a;
-	yield return d;
+	yield return s + " there";
+	yield return a[1][0];
+	yield return new double[] { d };
 }
 
 engine.Exec("data = get_data(7, True, 'hi', ['q', 'wert', 'y'], 3.14)");

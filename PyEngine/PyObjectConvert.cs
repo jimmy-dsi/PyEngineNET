@@ -13,6 +13,8 @@ public abstract partial class PyObject: IDisposable {
 			return new PyResolved(Engine.Default, value!);
 		} else if (typeof(T) == typeof(string)) {
 			return new PyResolved(Engine.Default, value!);
+		} else if (typeof(T) == typeof(char)) {
+			return new PyResolved(Engine.Default, value!.ToString());
 		} else if (typeof(T) == typeof(List<byte>)) {
 			return new PyResolved(Engine.Default, value!);
 		} else if (typeof(T) == typeof(List<object>)) {
@@ -195,6 +197,8 @@ public abstract partial class PyObject: IDisposable {
 	public static implicit operator PyObject (decimal                        o) => ConvertFrom(o);
 	public static implicit operator PyObject (decimal?                       o) => ConvertFrom(o);
 	public static implicit operator PyObject (string                         o) => ConvertFrom(o);
+	public static implicit operator PyObject (char                           o) => ConvertFrom(o);
+	public static implicit operator PyObject (char?                          o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<byte>                     o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<object>                   o) => ConvertFrom(o);
 	public static implicit operator PyObject (List<PyObject>                 o) => ConvertFrom(o);

@@ -352,6 +352,52 @@ internal static partial class Util {
 		    || type == typeof(IEnumerable<T>);
 	}
 
+	internal static bool IsConvArrayType(this Type type) {
+		return type == typeof(sbyte[])
+		    || type == typeof(ushort[])
+		    || type == typeof(short[])
+		    || type == typeof(uint[])
+		    || type == typeof(int[])
+		    || type == typeof(ulong[])
+		    || type == typeof(long[])
+		    || type == typeof(float[])
+		    || type == typeof(double[])
+		    || type == typeof(decimal[])
+		    || type == typeof(string[])
+		    || type == typeof(bool[]);
+	}
+
+	internal static bool IsConvListType(this Type type) {
+		return type == typeof(List<sbyte>)
+		    || type == typeof(List<ushort>)
+		    || type == typeof(List<short>)
+		    || type == typeof(List<uint>)
+		    || type == typeof(List<int>)
+		    || type == typeof(List<ulong>)
+		    || type == typeof(List<long>)
+		    || type == typeof(List<float>)
+		    || type == typeof(List<double>)
+		    || type == typeof(List<decimal>)
+		    || type == typeof(List<string>)
+		    || type == typeof(List<bool>);
+	}
+
+	internal static bool IsConvSetType(this Type type) {
+		return type == typeof(HashSet<byte>)
+		    || type == typeof(HashSet<sbyte>)
+		    || type == typeof(HashSet<ushort>)
+		    || type == typeof(HashSet<short>)
+		    || type == typeof(HashSet<uint>)
+		    || type == typeof(HashSet<int>)
+		    || type == typeof(HashSet<ulong>)
+		    || type == typeof(HashSet<long>)
+		    || type == typeof(HashSet<float>)
+		    || type == typeof(HashSet<double>)
+		    || type == typeof(HashSet<decimal>)
+		    || type == typeof(HashSet<string>)
+		    || type == typeof(HashSet<bool>);
+	}
+
 	internal static bool IsNullableType(this Type type) {
 		return Nullable.GetUnderlyingType(type) != null
 		    || !type.IsValueType;
