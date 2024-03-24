@@ -29,6 +29,8 @@ public partial class Engine: IDisposable {
 	private readonly Dictionary<string, GeneratorBinding> _boundGens  = new();
 
 	private readonly Dictionary<int, IEnumerator<PyObject>> _mappedGenerators = new();
+	private readonly Dictionary<string, Type> _excTypes = new();
+	private Exception? _lastException = null;
 
 	private Process? _subProcess = null;
 
@@ -372,7 +374,7 @@ public partial class Engine: IDisposable {
 		}
 	}
 
-	private PyException capturePyException(PyObject[] excInfo) {
+	private Exception capturePyException(PyObject[] excInfo) {
 		var approxExcType   = (string)     excInfo[0];
 		var reportedExcType = (string)     excInfo[1];
 		var excMessage      = (string)     excInfo[2];
@@ -443,29 +445,70 @@ public partial class Engine: IDisposable {
 				return new PySyntaxError(reportedExcType, excMessage, traceback);
 			case "EOFError":
 				return new PyEOFError(reportedExcType, excMessage, traceback);
+			case "NETException": {
+				var innerException = new PyException(reportedExcType, excMessage, traceback);
+				try {
+					return (Exception) Activator.CreateInstance(_excTypes[reportedExcType], excMessage, innerException)!;
+				} catch (MissingMethodException) { }
+				try {
+					return (Exception) Activator.CreateInstance(_excTypes[reportedExcType], excMessage)!;
+				} catch (MissingMethodException) { }
+				try {
+					return (Exception) Activator.CreateInstance(_excTypes[reportedExcType])!;
+				} catch (MissingMethodException) {
+					return _lastException!;
+				}
+			}
 			default:
 				return new PyException(reportedExcType, excMessage, traceback);
 		}
 	}
 
 	private void processException(Exception ex, ref Dictionary<string, object> result) {
-		var stackTrace = new StackTrace(ex, true);
-		var stackFrames = stackTrace.GetFrames();
+		var traceback = getExcTraceback(ex);
+		_excTypes[ex.GetType().ToString()] = ex.GetType();
+		_lastException = ex;
+		result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = PyExpression(new object[] { ex.GetType().ToString(), ex.Message, traceback }) });
+	}
+
+	private List<object> getExcTraceback(Exception ex) {
 		var traceback = new List<object>();
 
-		foreach (var item in stackFrames.Reverse()) {
-			var frameMethod = item.GetMethod();
-			var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
+		if (ex is PyException pex) {
+			foreach (var item in pex.PyTraceback) {
+				var fullMethodName = item.FunctionName;
 
-			traceback.Add(new List<object> {
-				item.GetFileName() ?? "",
-				item.GetFileLineNumber(), 
-				fullMethodName,
-				"",
-				frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
-			});
+				traceback.Add(new List<object> {
+					item.FileName,
+					item.LineNo, 
+					fullMethodName,
+					item.Text,
+					item.FunctionParams
+				});
+			}
+		} else {
+			var stackTrace = new StackTrace(ex, true);
+			var stackFrames = stackTrace.GetFrames();
+
+			foreach (var item in stackFrames.Reverse()) {
+				var frameMethod = item.GetMethod();
+				var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
+
+				traceback.Add(new List<object> {
+					item.GetFileName() ?? "",
+					item.GetFileLineNumber(), 
+					fullMethodName,
+					"",
+					frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
+				});
+			}
 		}
-		result = sendAndReceive(new() { ["cm"] = "err", ["dt"] = PyExpression(new object[] { ex.GetType().ToString(), ex.Message, traceback }) });
+
+		if (ex.InnerException != null) {
+			traceback.AddRange(getExcTraceback(ex.InnerException));
+		}
+
+		return traceback;
 	}
 
 	internal void BindMethod(string pyFuncName, MethodBinding csMethod) {

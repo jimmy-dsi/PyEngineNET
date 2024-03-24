@@ -221,7 +221,7 @@ void hi(Dictionary<string, object> test) {
 
 try {
 	hello(new());
-} catch (PyException ex) {
+} catch (Exception ex) {
 	Console.WriteLine(ex);
 }
 
@@ -323,4 +323,22 @@ engine.Exec("print(next(data))");
 engine.Exec("print(next(data))");
 engine.Exec("print(next(data))");
 engine.Exec("print(next(data))");
-engine.Exec("print(next(data))");
+try {
+	engine.Exec("print(next(data))");
+} catch (Exception) {
+
+}
+
+engine.BindFunction("test_err_prop_0", () => {
+	engine.Exec("test_err_prop(0)");
+});
+
+engine.BindFunction("test_err_prop", (int divisor) => {
+	return 10 / divisor;
+});
+
+try {
+	engine.Exec("test_err_prop_0()");
+} catch (Exception ex) {
+	Console.WriteLine(ex);
+}

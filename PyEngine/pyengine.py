@@ -323,6 +323,10 @@ def exc_traceback(e):
 def exc_dict(e):
 	dt = type(e)
 	true_dtname = dt.__name__ if dt.__module__ in {'__main__', 'builtins'} else f'{dt.__module__}.{dt.__name__}'
+	msg = str(e)
+	if true_dtname == 'NETException':
+		true_dtname = e.typename
+		msg = e.message
 
 	if isinstance(e, IOError):
 		dtname = 'IOError'
@@ -386,6 +390,8 @@ def exc_dict(e):
 		dtname = 'SyntaxError'
 	elif isinstance(e, EOFError):
 		dtname = 'EOFError'
+	elif isinstance(e, NETException):
+		dtname = 'NETException'
 	else:
 		dtname = 'Exception'
 
@@ -394,7 +400,7 @@ def exc_dict(e):
 		'dt': [
 			dtname,
 			true_dtname,
-			str(e),
+			msg,
 			[
 				(x.filename, x.lineno, x.name, x.line, x.params if isinstance(x, Frame) else '')
 				for x in exc_traceback(e)
