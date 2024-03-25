@@ -446,17 +446,22 @@ public partial class Engine: IDisposable {
 			case "EOFError":
 				return new PyEOFError(reportedExcType, excMessage, traceback);
 			case "NETException": {
-				var innerException = new PyException(reportedExcType, excMessage, traceback);
-				try {
-					return (Exception) Activator.CreateInstance(_excTypes[reportedExcType], excMessage, innerException)!;
-				} catch (MissingMethodException) { }
-				try {
-					return (Exception) Activator.CreateInstance(_excTypes[reportedExcType], excMessage)!;
-				} catch (MissingMethodException) { }
-				try {
-					return (Exception) Activator.CreateInstance(_excTypes[reportedExcType])!;
-				} catch (MissingMethodException) {
-					return _lastException!;
+				if (_lastException is PyException pex) {
+					pex.SetTraceback(traceback);
+					return pex;
+				} else {
+					var innerException = new PyException(reportedExcType, excMessage, traceback);
+					try {
+						return (Exception) Activator.CreateInstance(_excTypes[reportedExcType], excMessage, innerException)!;
+					} catch (MissingMethodException) { }
+					try {
+						return (Exception) Activator.CreateInstance(_excTypes[reportedExcType], excMessage)!;
+					} catch (MissingMethodException) { }
+					try {
+						return (Exception) Activator.CreateInstance(_excTypes[reportedExcType])!;
+					} catch (MissingMethodException) {
+						return _lastException!;
+					}
 				}
 			}
 			default:
@@ -474,6 +479,22 @@ public partial class Engine: IDisposable {
 	private List<object> getExcTraceback(Exception ex) {
 		var traceback = new List<object>();
 
+		var stackTrace = new StackTrace(ex, true);
+		var stackFrames = stackTrace.GetFrames();
+
+		foreach (var item in stackFrames.Reverse()) {
+			var frameMethod = item.GetMethod();
+			var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
+
+			traceback.Add(new List<object> {
+				item.GetFileName() ?? "",
+				item.GetFileLineNumber(), 
+				fullMethodName,
+				"",
+				frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
+			});
+		}
+
 		if (ex is PyException pex) {
 			foreach (var item in pex.PyTraceback) {
 				var fullMethodName = item.FunctionName;
@@ -484,22 +505,6 @@ public partial class Engine: IDisposable {
 					fullMethodName,
 					item.Text,
 					item.FunctionParams
-				});
-			}
-		} else {
-			var stackTrace = new StackTrace(ex, true);
-			var stackFrames = stackTrace.GetFrames();
-
-			foreach (var item in stackFrames.Reverse()) {
-				var frameMethod = item.GetMethod();
-				var fullMethodName = frameMethod == null ? "<unknown method>" : $"{frameMethod.ReflectedType}.{frameMethod.Name}";
-
-				traceback.Add(new List<object> {
-					item.GetFileName() ?? "",
-					item.GetFileLineNumber(), 
-					fullMethodName,
-					"",
-					frameMethod == null ? "" : string.Join(", ", frameMethod.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"))
 				});
 			}
 		}

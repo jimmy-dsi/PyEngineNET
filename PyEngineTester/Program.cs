@@ -342,3 +342,33 @@ try {
 } catch (Exception ex) {
 	Console.WriteLine(ex);
 }
+
+engine.BindFunction("trigger_py_err", () => {
+	engine.Exec("x = 1 // 0");
+});
+
+try {
+	engine.Exec("x = 1 // 0");
+} catch (PyZeroDivisionError ex) {
+	Console.WriteLine(ex);
+}
+
+try {
+	engine.Exec("trigger_py_err()");
+} catch (PyZeroDivisionError ex) {
+	Console.WriteLine(ex);
+}
+
+engine.BindFunction("trigger_py_err_2_inner", () => {
+	engine.Exec("x = ([1, 2, 3])[4]");
+});
+
+engine.BindFunction("trigger_py_err_2", () => {
+	engine.Exec("trigger_py_err_2_inner()");
+});
+
+try {
+	engine.Exec("trigger_py_err_2()");
+} catch (PyIndexError ex) {
+	Console.WriteLine(ex);
+}

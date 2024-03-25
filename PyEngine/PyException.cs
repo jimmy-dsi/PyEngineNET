@@ -18,31 +18,64 @@ public class PyException: Exception {
 
 	public int PyTracebackLength => _traceback.Length;
 
-	public PyException(): base() {
+	internal PyException(): base() {
 		PyExceptionType = "";
 		PyMessage = "";
 		
 		_traceback = new PyTraceback[0];
 	}
 
-	public PyException(string message): base(message) {
+	internal PyException(string message): base(message) {
 		PyExceptionType = "";
 		PyMessage = message;
 		
 		_traceback = new PyTraceback[0];
 	}
 
-	public PyException(string pyExcType, string message): base(pyExcType + " - " + message) {
+	internal PyException(string pyExcType, string message): base(pyExcType + " - " + message) {
 		PyExceptionType = pyExcType;
 		PyMessage       = message;
 
 		_traceback = new PyTraceback[0];
 	}
 
-	public PyException(string pyExcType, string message, PyObject[] traceback): base(pyExcType + " - " + message) {
+	internal PyException(string pyExcType, string message, PyObject[] traceback): base(pyExcType + " - " + message) {
 		PyExceptionType = pyExcType;
 		PyMessage       = message;
 
+		var tb = new List<PyTraceback>();
+		foreach (var item in traceback) {
+			var pyTuple = (PyObject[]) item;
+			tb.Add(new PyTraceback {
+				FileName       = (string) pyTuple[0],
+				LineNo         = (int)    pyTuple[1],
+				FunctionName   = (string) pyTuple[2],
+				Text           = (string) pyTuple[3],
+				FunctionParams = pyTuple.Length > 4 ? (string) pyTuple[4] : ""
+			});
+		}
+
+		_traceback = tb.ToArray();
+	}
+
+	internal void AppendTraceback(PyObject[] traceback) {
+		var tb = new List<PyTraceback>();
+		foreach (var item in traceback) {
+			var pyTuple = (PyObject[]) item;
+			tb.Add(new PyTraceback {
+				FileName       = (string) pyTuple[0],
+				LineNo         = (int)    pyTuple[1],
+				FunctionName   = (string) pyTuple[2],
+				Text           = (string) pyTuple[3],
+				FunctionParams = pyTuple.Length > 4 ? (string) pyTuple[4] : ""
+			});
+		}
+
+		tb.AddRange(_traceback);
+		_traceback = tb.ToArray();
+	}
+
+	internal void SetTraceback(PyObject[] traceback) {
 		var tb = new List<PyTraceback>();
 		foreach (var item in traceback) {
 			var pyTuple = (PyObject[]) item;
@@ -80,227 +113,227 @@ public class PyException: Exception {
 }
 
 public class PyIOError: PyException {
-	public PyIOError(): base() { }
-	public PyIOError(string message): base(message) { }
-	public PyIOError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyIOError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyIOError(): base() { }
+	internal PyIOError(string message): base(message) { }
+	internal PyIOError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyIOError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyOSError: PyException {
-	public PyOSError(): base() { }
-	public PyOSError(string message): base(message) { }
-	public PyOSError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyOSError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyOSError(): base() { }
+	internal PyOSError(string message): base(message) { }
+	internal PyOSError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyOSError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyFileNotFoundError: PyOSError {
-	public PyFileNotFoundError(): base() { }
-	public PyFileNotFoundError(string message): base(message) { }
-	public PyFileNotFoundError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyFileNotFoundError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyFileNotFoundError(): base() { }
+	internal PyFileNotFoundError(string message): base(message) { }
+	internal PyFileNotFoundError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyFileNotFoundError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyFileExistsError: PyOSError {
-	public PyFileExistsError(): base() { }
-	public PyFileExistsError(string message): base(message) { }
-	public PyFileExistsError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyFileExistsError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyFileExistsError(): base() { }
+	internal PyFileExistsError(string message): base(message) { }
+	internal PyFileExistsError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyFileExistsError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyPermissionError: PyOSError {
-	public PyPermissionError(): base() { }
-	public PyPermissionError(string message): base(message) { }
-	public PyPermissionError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyPermissionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyPermissionError(): base() { }
+	internal PyPermissionError(string message): base(message) { }
+	internal PyPermissionError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyPermissionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyConnectionError: PyOSError {
-	public PyConnectionError(): base() { }
-	public PyConnectionError(string message): base(message) { }
-	public PyConnectionError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyConnectionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyConnectionError(): base() { }
+	internal PyConnectionError(string message): base(message) { }
+	internal PyConnectionError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyConnectionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyTimeoutError: PyOSError {
-	public PyTimeoutError(): base() { }
-	public PyTimeoutError(string message): base(message) { }
-	public PyTimeoutError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyTimeoutError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyTimeoutError(): base() { }
+	internal PyTimeoutError(string message): base(message) { }
+	internal PyTimeoutError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyTimeoutError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyIsADirectoryError: PyOSError {
-	public PyIsADirectoryError(): base() { }
-	public PyIsADirectoryError(string message): base(message) { }
-	public PyIsADirectoryError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyIsADirectoryError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyIsADirectoryError(): base() { }
+	internal PyIsADirectoryError(string message): base(message) { }
+	internal PyIsADirectoryError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyIsADirectoryError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyValueError: PyException {
-	public PyValueError(): base() { }
-	public PyValueError(string message): base(message) { }
-	public PyValueError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyValueError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyValueError(): base() { }
+	internal PyValueError(string message): base(message) { }
+	internal PyValueError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyValueError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyTypeError: PyException {
-	public PyTypeError(): base() { }
-	public PyTypeError(string message): base(message) { }
-	public PyTypeError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyTypeError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyTypeError(): base() { }
+	internal PyTypeError(string message): base(message) { }
+	internal PyTypeError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyTypeError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyAttributeError: PyException {
-	public PyAttributeError(): base() { }
-	public PyAttributeError(string message): base(message) { }
-	public PyAttributeError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyAttributeError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyAttributeError(): base() { }
+	internal PyAttributeError(string message): base(message) { }
+	internal PyAttributeError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyAttributeError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyImportError: PyException {
-	public PyImportError(): base() { }
-	public PyImportError(string message): base(message) { }
-	public PyImportError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyImportError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyImportError(): base() { }
+	internal PyImportError(string message): base(message) { }
+	internal PyImportError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyImportError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyModuleNotFoundError: PyImportError {
-	public PyModuleNotFoundError(): base() { }
-	public PyModuleNotFoundError(string message): base(message) { }
-	public PyModuleNotFoundError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyModuleNotFoundError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyModuleNotFoundError(): base() { }
+	internal PyModuleNotFoundError(string message): base(message) { }
+	internal PyModuleNotFoundError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyModuleNotFoundError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyNameError: PyException {
-	public PyNameError(): base() { }
-	public PyNameError(string message): base(message) { }
-	public PyNameError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyNameError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyNameError(): base() { }
+	internal PyNameError(string message): base(message) { }
+	internal PyNameError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyNameError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyLookupError: PyException {
-	public PyLookupError(): base() { }
-	public PyLookupError(string message): base(message) { }
-	public PyLookupError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyLookupError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyLookupError(): base() { }
+	internal PyLookupError(string message): base(message) { }
+	internal PyLookupError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyLookupError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyIndexError: PyLookupError {
-	public PyIndexError(): base() { }
-	public PyIndexError(string message): base(message) { }
-	public PyIndexError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyIndexError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyIndexError(): base() { }
+	internal PyIndexError(string message): base(message) { }
+	internal PyIndexError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyIndexError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyKeyError: PyLookupError {
-	public PyKeyError(): base() { }
-	public PyKeyError(string message): base(message) { }
-	public PyKeyError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyKeyError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyKeyError(): base() { }
+	internal PyKeyError(string message): base(message) { }
+	internal PyKeyError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyKeyError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyStopIteration: PyException {
-	public PyStopIteration(): base() { }
-	public PyStopIteration(string message): base(message) { }
-	public PyStopIteration(string pyExcType, string message): base(pyExcType, message) { }
-	public PyStopIteration(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyStopIteration(): base() { }
+	internal PyStopIteration(string message): base(message) { }
+	internal PyStopIteration(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyStopIteration(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyStopAsyncIteration: PyException {
-	public PyStopAsyncIteration(): base() { }
-	public PyStopAsyncIteration(string message): base(message) { }
-	public PyStopAsyncIteration(string pyExcType, string message): base(pyExcType, message) { }
-	public PyStopAsyncIteration(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyStopAsyncIteration(): base() { }
+	internal PyStopAsyncIteration(string message): base(message) { }
+	internal PyStopAsyncIteration(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyStopAsyncIteration(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyArithmeticError: PyException {
-	public PyArithmeticError(): base() { }
-	public PyArithmeticError(string message): base(message) { }
-	public PyArithmeticError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyArithmeticError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyArithmeticError(): base() { }
+	internal PyArithmeticError(string message): base(message) { }
+	internal PyArithmeticError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyArithmeticError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyZeroDivisionError: PyArithmeticError {
-	public PyZeroDivisionError(): base() { }
-	public PyZeroDivisionError(string message): base(message) { }
-	public PyZeroDivisionError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyZeroDivisionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyZeroDivisionError(): base() { }
+	internal PyZeroDivisionError(string message): base(message) { }
+	internal PyZeroDivisionError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyZeroDivisionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyOverflowError: PyArithmeticError {
-	public PyOverflowError(): base() { }
-	public PyOverflowError(string message): base(message) { }
-	public PyOverflowError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyOverflowError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyOverflowError(): base() { }
+	internal PyOverflowError(string message): base(message) { }
+	internal PyOverflowError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyOverflowError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyFloatingPointError: PyArithmeticError {
-	public PyFloatingPointError(): base() { }
-	public PyFloatingPointError(string message): base(message) { }
-	public PyFloatingPointError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyFloatingPointError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyFloatingPointError(): base() { }
+	internal PyFloatingPointError(string message): base(message) { }
+	internal PyFloatingPointError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyFloatingPointError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyAssertionError: PyException {
-	public PyAssertionError(): base() { }
-	public PyAssertionError(string message): base(message) { }
-	public PyAssertionError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyAssertionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyAssertionError(): base() { }
+	internal PyAssertionError(string message): base(message) { }
+	internal PyAssertionError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyAssertionError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyRuntimeError: PyException {
-	public PyRuntimeError(): base() { }
-	public PyRuntimeError(string message): base(message) { }
-	public PyRuntimeError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyRuntimeError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyRuntimeError(): base() { }
+	internal PyRuntimeError(string message): base(message) { }
+	internal PyRuntimeError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyRuntimeError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyNotImplementedError: PyException {
-	public PyNotImplementedError(): base() { }
-	public PyNotImplementedError(string message): base(message) { }
-	public PyNotImplementedError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyNotImplementedError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyNotImplementedError(): base() { }
+	internal PyNotImplementedError(string message): base(message) { }
+	internal PyNotImplementedError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyNotImplementedError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyMemoryError: PyException {
-	public PyMemoryError(): base() { }
-	public PyMemoryError(string message): base(message) { }
-	public PyMemoryError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyMemoryError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyMemoryError(): base() { }
+	internal PyMemoryError(string message): base(message) { }
+	internal PyMemoryError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyMemoryError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyBufferError: PyException {
-	public PyBufferError(): base() { }
-	public PyBufferError(string message): base(message) { }
-	public PyBufferError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyBufferError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyBufferError(): base() { }
+	internal PyBufferError(string message): base(message) { }
+	internal PyBufferError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyBufferError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyReferenceError: PyException {
-	public PyReferenceError(): base() { }
-	public PyReferenceError(string message): base(message) { }
-	public PyReferenceError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyReferenceError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyReferenceError(): base() { }
+	internal PyReferenceError(string message): base(message) { }
+	internal PyReferenceError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyReferenceError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PySystemError: PyException {
-	public PySystemError(): base() { }
-	public PySystemError(string message): base(message) { }
-	public PySystemError(string pyExcType, string message): base(pyExcType, message) { }
-	public PySystemError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PySystemError(): base() { }
+	internal PySystemError(string message): base(message) { }
+	internal PySystemError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PySystemError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PySyntaxError: PyException {
-	public PySyntaxError(): base() { }
-	public PySyntaxError(string message): base(message) { }
-	public PySyntaxError(string pyExcType, string message): base(pyExcType, message) { }
-	public PySyntaxError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PySyntaxError(): base() { }
+	internal PySyntaxError(string message): base(message) { }
+	internal PySyntaxError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PySyntaxError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public class PyEOFError: PyException {
-	public PyEOFError(): base() { }
-	public PyEOFError(string message): base(message) { }
-	public PyEOFError(string pyExcType, string message): base(pyExcType, message) { }
-	public PyEOFError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
+	internal PyEOFError(): base() { }
+	internal PyEOFError(string message): base(message) { }
+	internal PyEOFError(string pyExcType, string message): base(pyExcType, message) { }
+	internal PyEOFError(string pyExcType, string message, PyObject[] traceback): base(pyExcType, message, traceback) { }
 }
 
 public struct PyTraceback {
